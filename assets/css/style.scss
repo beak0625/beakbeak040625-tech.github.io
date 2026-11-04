@@ -1,0 +1,24 @@
+---
+---
+@import 'jekyll-theme-chirpy';
+
+/* 동글동글하고 귀여운 폰트 (구글 폰트 Jua) 불러오기 */
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+body {
+  font-family: 'Jua', sans-serif !important;
+}
+
+/* 쿠리만쥬 맞춤 색상표 (라이트 모드 기준) */
+[data-theme="light"] {
+  --main-bg: #fffbf5 !important; 
+  --sidebar-bg: #f4e6d4 !important; 
+  
+  --text-color: #5a4a3a !important; 
+  --heading-color: #3e2f21 !important; 
+  
+  --link-color: #e58b88 !important; 
+  --sidebar-active-color: #e58b88 !important; 
+  --btn-primary-bg: #e58b88 !important;
+  --btn-primary-border-color: #e58b88 !important;
+}
