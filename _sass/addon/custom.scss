@@ -1,0 +1,25 @@
+/* 동글동글하고 귀여운 폰트 (구글 폰트 Jua) 불러오기 */
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+/* 전체 폰트 적용 */
+body {
+  font-family: 'Jua', sans-serif !important;
+}
+
+/* 쿠리만쥬 맞춤 색상표 (라이트 모드 기준) */
+[data-theme="light"] {
+  /* 배경색: 아주 연한 베이지색 */
+  --main-bg: #fffbf5 !important; 
+  /* 사이드바 배경색: 쿠리만쥬 피부톤 (부드러운 베이지) */
+  --sidebar-bg: #f4e6d4 !important; 
+  
+  /* 글자색: 너무 딱딱한 검정 대신 부드러운 진갈색 */
+  --text-color: #5a4a3a !important; 
+  --heading-color: #3e2f21 !important; 
+  
+  /* 링크 및 포인트 색상: 쿠리만쥬 볼터치 느낌의 핑크 코랄 */
+  --link-color: #e58b88 !important; 
+  --sidebar-active-color: #e58b88 !important; 
+  --btn-primary-bg: #e58b88 !important;
+  --btn-primary-border-color: #e58b88 !important;
+}
