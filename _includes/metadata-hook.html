@@ -107,4 +107,30 @@
     margin-left: 6px;
     font-size: 1.1em;
   }
+
+  /* 6. [NEW] 우측 사이드바(Trending Tags 아래)에 쿠리만쥬 이미지 큼직하게 띄우기 */
+  @media(min-width: 1200px) {
+    #panel-wrapper {
+      position: relative;
+    }
+  }
 </style>
+
+<script>
+  // 페이지가 로드되면 우측 패널(Trending Tags 아래)에 쿠리만쥬 이미지 카드 강제 삽입
+  document.addEventListener("DOMContentLoaded", function() {
+    const panelWrapper = document.getElementById('panel-wrapper');
+    if (panelWrapper && !document.getElementById('kurimanjoo-banner')) {
+      const bannerDiv = document.createElement('div');
+      bannerDiv.id = 'kurimanjoo-banner';
+      bannerDiv.style.cssText = "margin-top: 20px; padding: 12px; background: #ffffff; border: 2px solid #f0decb; border-radius: 18px; box-shadow: 0 5px 0px #ebd8c5; text-align: center;";
+      
+      bannerDiv.innerHTML = `
+        <div style="font-size: 14px; font-weight: bold; color: #5a4a3a; margin-bottom: 8px;">✨ 하—! 🍺</div>
+        <img src="/assets/kuri.jpeg" alt="쿠리만쥬" style="width: 100%; border-radius: 12px; border: 2px solid #f4e6d4;" />
+      `;
+      
+      panelWrapper.appendChild(bannerDiv);
+    }
+  });
+</script>
