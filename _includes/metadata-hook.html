@@ -1,33 +1,64 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 
 <style>
-  /* 모든 글씨체 쿠리만쥬 느낌의 둥근 폰트로 강제 변경 */
+  /* 1. 기본 폰트 및 색상 변수 세팅 */
   body, h1, h2, h3, h4, h5, h6, p, a, span, li, div {
     font-family: 'Jua', sans-serif !important;
   }
 
-  /* 다크모드/라이트모드 무시하고 쿠리만쥬 배경색 및 글자색 강제 덮어쓰기 */
   :root, html, body, [data-mode="light"], [data-mode="dark"] {
-    --main-bg: #fffbf5 !important;           /* 메인 배경: 따뜻한 크림 베이지 */
-    --sidebar-bg: #f4e6d4 !important;        /* 왼쪽 사이드바: 쿠리만쥬 피부톤 */
-    --card-bg: #ffffff !important;           /* 게시글 카드 배경: 흰색 */
-    --topbar-bg: rgba(255, 251, 245, 0.85) !important; /* 상단바 배경 */
-    
-    --text-color: #5a4a3a !important;        /* 기본 글자색: 부드러운 진갈색 */
-    --heading-color: #3e2f21 !important;     /* 제목 글자색: 밤색 */
-    --site-title-color: #3e2f21 !important;  /* 블로그 제목 색 */
-    --site-subtitle-color: #7a634d !important; /* 블로그 부제목 색 */
-    
-    --link-color: #e58b88 !important;        /* 링크/포인트: 볼터치 핑크코랄 */
-    --sidebar-active-color: #e58b88 !important; /* 선택된 메뉴 색 */
-    --sidebar-muted-color: #7a634d !important;  /* 사이드바 기본 글자색 */
+    --main-bg: #fffbf5 !important;
+    --sidebar-bg: #f4e6d4 !important;
+    --card-bg: #ffffff !important;
+    --topbar-bg: rgba(255, 251, 245, 0.85) !important;
+    --text-color: #5a4a3a !important;
+    --heading-color: #3e2f21 !important;
+    --site-title-color: #3e2f21 !important;
+    --site-subtitle-color: #7a634d !important;
+    --link-color: #e58b88 !important;
+    --sidebar-active-color: #d97724 !important;
+    --sidebar-muted-color: #7a634d !important;
   }
 
-  /* 실제 영역에 배경색 직접 지정 */
+  /* 2. 메인 배경: 은은한 밤색 도트 패턴 */
   body, #main-wrapper {
     background-color: #fffbf5 !important;
+    background-image: radial-gradient(#e6d5c3 1.5px, transparent 1.5px) !important;
+    background-size: 24px 24px !important;
   }
+
+  /* 사이드바 우측 점선 테두리 */
   #sidebar {
     background-color: #f4e6d4 !important;
+    border-right: 3px dashed #dcc5b0 !important;
   }
-</style>
+
+  /* 3. 쿠리만쥬 프사 테두리 & 갸우뚱 애니메이션 */
+  #sidebar #avatar {
+    border: 4px solid #7a5c43 !important;
+    box-shadow: 0 4px 12px rgba(90, 74, 58, 0.2) !important;
+    transition: transform 0.3s ease !important;
+  }
+  #sidebar #avatar:hover {
+    transform: rotate(10deg) scale(1.08) !important;
+  }
+
+  /* 4. 게시글 카드 입체 효과 */
+  #post-list .card-wrapper .card {
+    border: 2px solid #f0decb !important;
+    border-radius: 18px !important;
+    box-shadow: 0 5px 0px #ebd8c5 !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #ffffff !important;
+  }
+  #post-list .card-wrapper .card:hover {
+    transform: translateY(-5px) !important;
+    border-color: #f5b041 !important; /* 맥주색 테두리로 강조 */
+    box-shadow: 0 9px 0px #f8c471 !important;
+  }
+
+  /* 5. [핵심] Trending Tags -> 미니 맥주캔 모양으로 변경 */
+  .post-tag {
+    /* 위쪽 28%는 하얀 맥주 거품, 아래쪽은 황금빛 맥주 그라데이션 */
+    background: linear-gradient(to bottom, #ffffff 0%, #ffffff 28%, #f7be56 28%, #e59824 100%) !important;
+    color: #3e2f21 !important;
