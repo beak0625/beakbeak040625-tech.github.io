@@ -1,0 +1,20 @@
+/* 구글 폰트 Jua */
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+body {
+  font-family: 'Jua', sans-serif !important;
+}
+
+/* 다크, 라이트 모드 상관없이 무조건 쿠리만쥬 테마 강제 적용 */
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  --main-bg: #fffbf5 !important;
+  --sidebar-bg: #f4e6d4 !important;
+  --text-color: #5a4a3a !important;
+  --heading-color: #3e2f21 !important;
+  --link-color: #e58b88 !important;
+  --sidebar-active-color: #e58b88 !important;
+  --btn-primary-bg: #e58b88 !important;
+  --btn-primary-border-color: #e58b88 !important;
+}
