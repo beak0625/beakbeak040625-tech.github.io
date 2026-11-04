@@ -1,0 +1,33 @@
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+<style>
+  /* 모든 글씨체 쿠리만쥬 느낌의 둥근 폰트로 강제 변경 */
+  body, h1, h2, h3, h4, h5, h6, p, a, span, li, div {
+    font-family: 'Jua', sans-serif !important;
+  }
+
+  /* 다크모드/라이트모드 무시하고 쿠리만쥬 배경색 및 글자색 강제 덮어쓰기 */
+  :root, html, body, [data-mode="light"], [data-mode="dark"] {
+    --main-bg: #fffbf5 !important;           /* 메인 배경: 따뜻한 크림 베이지 */
+    --sidebar-bg: #f4e6d4 !important;        /* 왼쪽 사이드바: 쿠리만쥬 피부톤 */
+    --card-bg: #ffffff !important;           /* 게시글 카드 배경: 흰색 */
+    --topbar-bg: rgba(255, 251, 245, 0.85) !important; /* 상단바 배경 */
+    
+    --text-color: #5a4a3a !important;        /* 기본 글자색: 부드러운 진갈색 */
+    --heading-color: #3e2f21 !important;     /* 제목 글자색: 밤색 */
+    --site-title-color: #3e2f21 !important;  /* 블로그 제목 색 */
+    --site-subtitle-color: #7a634d !important; /* 블로그 부제목 색 */
+    
+    --link-color: #e58b88 !important;        /* 링크/포인트: 볼터치 핑크코랄 */
+    --sidebar-active-color: #e58b88 !important; /* 선택된 메뉴 색 */
+    --sidebar-muted-color: #7a634d !important;  /* 사이드바 기본 글자색 */
+  }
+
+  /* 실제 영역에 배경색 직접 지정 */
+  body, #main-wrapper {
+    background-color: #fffbf5 !important;
+  }
+  #sidebar {
+    background-color: #f4e6d4 !important;
+  }
+</style>
