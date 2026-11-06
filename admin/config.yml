@@ -1,0 +1,18 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "assets/img"
+public_folder: "/assets/img"
+
+collections:
+  - name: "posts"
+    label: "블로그 포스트"
+    folder: "_posts"
+    create: true
+    fields:
+      - {label: "제목", name: "title", widget: "string"}
+      - {label: "작성일", name: "date", widget: "datetime"}
+      - {label: "카테고리", name: "categories", widget: "select", options: ["개발", "CTF/Wargame", "Bug Bounty", "블로그/기술문서", "논문/컨퍼런스", "공모전/자격증"]}
+      - {label: "태그", name: "tags", widget: "list"}
+      - {label: "본문", name: "body", widget: "markdown"}
