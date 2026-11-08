@@ -1,129 +1,52 @@
-<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-
+<!-- 1. 블로그 마크다운 표 기본 스타일 자동 적용 -->
 <style>
-  /* 1. 기본 폰트 적용 */
-  body, h1, h2, h3, h4, h5, h6, p, a, span, li, div {
-    font-family: 'Jua', sans-serif !important;
+  .post-content table, .content table {
+    width: 100% !important;
+    display: table !important;
+    border-collapse: collapse !important;
+    margin-bottom: 24px !important;
   }
-
-  :root, html, body, [data-mode="light"], [data-mode="dark"] {
-    --main-bg: #fffbf5 !important;
-    --sidebar-bg: #f4e6d4 !important;
-    --card-bg: #ffffff !important;
-    --topbar-bg: rgba(255, 251, 245, 0.85) !important;
-    --text-color: #5a4a3a !important;
-    --heading-color: #3e2f21 !important;
-    --site-title-color: #3e2f21 !important;
-    --site-subtitle-color: #7a634d !important;
-    --link-color: #e58b88 !important;
-    --sidebar-active-color: #d97724 !important;
-    --sidebar-muted-color: #7a634d !important;
+  .post-content table th, .post-content table td,
+  .content table th, .content table td {
+    border: 1px solid #ddd !important;
+    padding: 12px 16px !important;
+    word-break: keep-all !important;
+    line-height: 1.6 !important;
   }
-
-  body, #main-wrapper {
-    background-color: #fffbf5 !important;
-    background-image: none !important;
-  }
-
-  #sidebar {
-    background-color: #f4e6d4 !important;
-    border-right: 3px dashed #dcc5b0 !important;
-  }
-
-  /* 2. 쿠리만쥬 프사 꾸미기 */
-  #sidebar #avatar {
-    border: 4px solid #7a5c43 !important;
-    box-shadow: 0 4px 12px rgba(90, 74, 58, 0.2) !important;
-    transition: transform 0.3s ease !important;
-  }
-  #sidebar #avatar:hover {
-    transform: rotate(10deg) scale(1.08) !important;
-  }
-
-  /* 3. 게시글 카드 입체 효과 */
-  #post-list .card-wrapper .card {
-    border: 2px solid #f0decb !important;
-    border-radius: 18px !important;
-    box-shadow: 0 5px 0px #ebd8c5 !important;
-    transition: all 0.2s ease-in-out !important;
-    background-color: #ffffff !important;
-  }
-  #post-list .card-wrapper .card:hover {
-    transform: translateY(-5px) !important;
-    border-color: #f5b041 !important;
-    box-shadow: 0 9px 0px #f8c471 !important;
-  }
-
-  /* 4. 맥주캔 스타일 태그 */
-  .post-tag {
-    background: linear-gradient(to bottom, #ffffff 0%, #ffffff 28%, #f7be56 28%, #e59824 100%) !important;
-    color: #3e2f21 !important;
-    border-top: 3px solid #b8c2cc !important;
-    border-bottom: 3px solid #b8c2cc !important;
-    border-left: 1.5px solid #d48817 !important;
-    border-right: 1.5px solid #d48817 !important;
-    border-radius: 6px !important;
-    padding: 6px 12px 4px 12px !important;
-    box-shadow: 0 3px 0px rgba(90, 74, 58, 0.15) !important;
-    transition: all 0.2s ease !important;
-    position: relative !important;
-    display: inline-block !important;
-    margin: 4px 3px !important;
-  }
-  .post-tag:hover {
-    transform: translateY(-3px) rotate(-5deg) scale(1.06) !important;
-    background: linear-gradient(to bottom, #ffffff 0%, #ffffff 35%, #ffd06b 35%, #f3a62b 100%) !important;
-    color: #2c1e12 !important;
-    box-shadow: 0 6px 8px rgba(229, 152, 36, 0.3) !important;
-  }
-  .post-tag:hover::after {
-    content: "🍺캬-!";
-    position: absolute;
-    top: -22px;
-    right: -12px;
-    background: #3e2f21;
-    color: #fffbf5;
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 8px;
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    z-index: 10;
-  }
-
-  /* 5. 사이드바 선택 메뉴 */
-  #sidebar ul li.nav-item.active .nav-link {
-    background: linear-gradient(90deg, #ffffff 0%, #fffdf9 18%, #f7be56 18%, #f5b041 100%) !important;
-    border-top: 2px solid #d48817 !important;
-    border-bottom: 2px solid #d48817 !important;
-    border-left: 5px solid #b8c2cc !important;
-    border-right: 3px solid #b8c2cc !important;
-    border-radius: 6px !important;
-    box-shadow: 0 4px 0px #d48817 !important;
-    color: #3e2f21 !important;
-  }
-  #sidebar ul li.nav-item.active .nav-link::after {
-    content: " 🍺";
-    margin-left: 6px;
-    font-size: 1.1em;
+  .post-content table th, .content table th {
+    background-color: #f8f9fa !important;
+    font-weight: bold !important;
+    text-align: center !important;
   }
 </style>
 
-<!-- 우측 Trending Tags 아래에 쿠리만쥬 이미지 강제 부착 스크립트 -->
+<!-- 2. 게시글 수정하기 버튼 강제 생성 스크립트 (최종 수정본) -->
+{% if page.layout == 'post' %}
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const panelWrapper = document.getElementById('panel-wrapper');
-    if (panelWrapper && !document.getElementById('kurimanjoo-banner')) {
-      const bannerDiv = document.createElement('div');
-      bannerDiv.id = 'kurimanjoo-banner';
-      bannerDiv.style.cssText = "margin-top: 20px; padding: 12px; background: #ffffff; border: 2px solid #f0decb; border-radius: 18px; box-shadow: 0 5px 0px #ebd8c5; text-align: center;";
-      
-      bannerDiv.innerHTML = `
-        <div style="font-size: 14px; font-weight: bold; color: #5a4a3a; margin-bottom: 8px; font-family: 'Jua', sans-serif;">✨ 하—! 🍺</div>
-        <img src="/assets/kuri.jpeg" alt="쿠리만쥬" style="width: 100%; border-radius: 12px; border: 2px solid #f4e6d4;" />
-      `;
-      
-      panelWrapper.appendChild(bannerDiv);
-    }
-  });
+  function forceAddEditButton() {
+    if (document.getElementById("my-custom-edit-btn")) return;
+    
+    var contentArea = document.querySelector(".content") || document.querySelector(".post-content") || document.querySelector("article");
+    if (!contentArea) return; 
+
+    // 파일 경로(예: _posts/2026-11-09-xxx.md)에서 확장자를 뺀 순수 파일명(2026-11-09-xxx)만 정확히 추출
+    var rawPath = "{{ page.path }}";
+    var fileName = rawPath.split('/').pop().split('.').shift();
+    var editUrl = "/admin/#/collections/posts/entries/" + fileName;
+    
+    var editBtn = document.createElement("a");
+    editBtn.id = "my-custom-edit-btn"; 
+    editBtn.href = editUrl;
+    editBtn.innerHTML = "✏️ 이 게시글 수정하기";
+    
+    editBtn.setAttribute("style", "display: inline-flex; align-items: center; justify-content: center; margin-top: 40px; margin-bottom: 20px; padding: 10px 20px; background-color: #f8f9fa; color: #555; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);");
+    editBtn.onmouseover = function() { this.style.backgroundColor = "#e9ecef"; this.style.transform = "translateY(-2px)"; };
+    editBtn.onmouseout = function() { this.style.backgroundColor = "#f8f9fa"; this.style.transform = "none"; };
+
+    contentArea.appendChild(editBtn);
+  }
+
+  document.addEventListener("DOMContentLoaded", forceAddEditButton);
+  setInterval(forceAddEditButton, 500); 
 </script>
+{% endif %}
