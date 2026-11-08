@@ -19,3 +19,31 @@
     text-align: center !important;
   }
 </style>
+
+
+<!-- 게시글 수정하기 버튼 자동 생성 스크립트 -->
+{% if page.layout == 'post' %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // 현재 포스트의 파일명 추출 (예: 2026-11-09-test)
+    var postFileName = "{{ page.name | split: '.' | first }}";
+    var editUrl = "/admin/#/collections/posts/entries/" + postFileName;
+    
+    // 버튼 디자인 및 생성
+    var editBtn = document.createElement("a");
+    editBtn.href = editUrl;
+    editBtn.innerHTML = "✏️ 이 게시글 수정하기";
+    editBtn.setAttribute("style", "display: inline-flex; align-items: center; justify-content: center; margin-top: 40px; padding: 10px 20px; background-color: #f8f9fa; color: #555; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);");
+    
+    // 마우스 올렸을 때 효과 (Hover)
+    editBtn.onmouseover = function() { this.style.backgroundColor = "#e9ecef"; this.style.transform = "translateY(-2px)"; };
+    editBtn.onmouseout = function() { this.style.backgroundColor = "#f8f9fa"; this.style.transform = "none"; };
+
+    // 블로그 본문(post-content) 맨 아래에 버튼 쏙 집어넣기
+    var postContent = document.querySelector(".post-content");
+    if (postContent) {
+      postContent.appendChild(editBtn);
+    }
+  });
+</script>
+{% endif %}
