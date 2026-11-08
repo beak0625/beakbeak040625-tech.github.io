@@ -7,6 +7,7 @@ math: true
 ---
 
 https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detecting-authentication-bypass-vulnerabilities-in-firmware-binaries/https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detecting-authentication-bypass-vulnerabilities-in-firmware-binaries/https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detecting-authentication-bypass-vulnerabilities-in-firmware-binaries/
+<br>
 선정 논문: Through the Authentication Maze: Detecting Authentication Bypass Vulnerabilities in Firmware Binaries   
 through the authentication maze.pdf
 
@@ -14,9 +15,14 @@ through the authentication maze.pdf
 
 저자: Nanyu Zhong, Yuekang Li, Yanyan Zou, Jiaxu Zhao, Jinwei Dong, Yang Xiao, Bingwei Peng, Yeting Li, Wei Wang, Wei Huo (Chinese Academy of Sciences, University of New South Wales)
 
+논문 선정이유
+
+논문을 보는게 처음이기 때문에 논문들 제목들을 전부 보고 관심이 가는 다섯가지로 추렸는데 그 중 이 논문이 제일 보안쪽 중심적인 내용을 다루는 제목인것 같아서 이 논문을 이해하면 보안관련 지식을 쌓을 수 있을까 라는 기대를 가지고 읽게되었음.
+
+
 <span style="font-size:1.5em;">논문 이해를 위한 용어정리</span>
 
-<br> <br>
+<br> 
 
 <span style="font-size:1.2em;">1. 임베디드 및 웹 인증 도메인 용어</span>
 
