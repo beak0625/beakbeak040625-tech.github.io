@@ -13,7 +13,6 @@ through the authentication maze.pdf
 게재 학회 및 연도: Network and Distributed System Security (NDSS) Symposium 2026   
 
 저자: Nanyu Zhong, Yuekang Li, Yanyan Zou, Jiaxu Zhao, Jinwei Dong, Yang Xiao, Bingwei Peng, Yeting Li, Wei Wang, Wei Huo (Chinese Academy of Sciences, University of New South Wales)
-<br> <br>
 
 <span style="font-size:1.5em;">논문 이해를 위한 용어정리</span>
 
