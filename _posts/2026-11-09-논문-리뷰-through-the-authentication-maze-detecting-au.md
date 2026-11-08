@@ -6,6 +6,9 @@ tags: ["Paper Review"]
 math: true
 ---
 
+https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detecting-authentication-bypass-vulnerabilities-in-firmware-binaries/https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detecting-authentication-bypass-vulnerabilities-in-firmware-binaries/https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detecting-authentication-bypass-vulnerabilities-in-firmware-binaries/
+
+
 <span style="font-size:1.5em;">논문 이해를 위한 용어정리</span>
 
 <br> <br>
