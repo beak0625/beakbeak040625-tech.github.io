@@ -18,46 +18,46 @@
     font-weight: bold !important;
     text-align: center !important;
   }
+
+  /* 💡 화면 왼쪽 아래에 무조건 떠 있는 수정 버튼 스타일 (테마 무시) */
+  #floating-edit-btn {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 999999; /* 화면 최상단에 무조건 노출 */
+    background-color: #222;
+    color: #fff !important;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 15px;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: 0.2s;
+  }
+  #floating-edit-btn:hover {
+    background-color: #555;
+    transform: scale(1.05);
+  }
 </style>
 
-<!-- 게시글 수정 버튼 동적 강제 생성 스크립트 -->
+<!-- 게시글 수정 버튼 화면 전체에 강제 부착 -->
 {% if page.layout == 'post' %}
 <script>
-  function injectEditButton() {
-    // 이미 생성되어 있다면 중복 방지
-    if (document.getElementById("fixed-post-edit-btn")) return;
-
-    // 본문 영역 탐색 (.post-content 또는 .content)
-    var targetArea = document.querySelector(".post-content") || document.querySelector(".content") || document.querySelector("article");
-    if (!targetArea) return;
-
-    // 현재 포스트의 파일명을 Liquid를 통해 안전하게 주입
-    var rawName = "{{ page.name }}";
-    var fileName = rawName ? rawName.split('.').shift() : "";
-    
-    if (!fileName) return;
-
-    var editUrl = "/admin/#/collections/posts/entries/" + fileName;
-
-    // 버튼 엘리먼트 생성
-    var btnWrapper = document.createElement("div");
-    btnWrapper.style.cssText = "margin-top: 40px; margin-bottom: 20px; text-align: left;";
-    
-    var editBtn = document.createElement("a");
-    editBtn.id = "fixed-post-edit-btn";
-    editBtn.href = editUrl;
-    editBtn.innerHTML = "✏️ 이 게시글 수정하기";
-    editBtn.setAttribute("style", "display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; background-color: #f8f9fa; color: #555; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s ease;");
-    
-    editBtn.onmouseover = function() { this.style.backgroundColor = "#e9ecef"; this.style.transform = "translateY(-2px)"; };
-    editBtn.onmouseout = function() { this.style.backgroundColor = "#f8f9fa"; this.style.transform = "none"; };
-
-    btnWrapper.appendChild(editBtn);
-    targetArea.appendChild(btnWrapper);
-  }
-
-  // 페이지 로드 및 동적 SPA 전환 대응을 위한 인터벌 체크
-  document.addEventListener("DOMContentLoaded", injectEditButton);
-  setInterval(injectEditButton, 400);
+  setInterval(function() {
+    // 버튼이 없고 화면(body)이 존재하면 무조건 생성
+    if (!document.getElementById("floating-edit-btn") && document.body) {
+      var btn = document.createElement("a");
+      btn.id = "floating-edit-btn";
+      
+      // Liquid로 파일명 완벽 추출
+      var fileName = "{{ page.path | split: '/' | last | split: '.' | first }}";
+      btn.href = "/admin/#/collections/posts/entries/" + fileName;
+      btn.innerHTML = "✏️ 이 글 수정하기";
+      
+      // 본문 위치 찾을 필요 없이 화면(body)에 직접 꽂아넣음
+      document.body.appendChild(btn);
+    }
+  }, 300); // 0.3초마다 끈질기게 확인
 </script>
 {% endif %}
