@@ -20,33 +20,26 @@
   }
 </style>
 
-<!-- 2. 게시글 수정하기 버튼 강제 생성 스크립트 (최종 수정본) -->
+<!-- 2. 게시글 수정하기 버튼 (Jekyll 빌드 시 주소 고정 삽입 방식) -->
 {% if page.layout == 'post' %}
+<div style="text-align: left; margin-top: 40px; margin-bottom: 20px;">
+  <a id="my-custom-edit-btn" 
+     href="/admin/#/collections/posts/entries/{{ page.name | split: '.' | first }}" 
+     style="display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; background-color: #f8f9fa; color: #555; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+     onmouseover="this.style.backgroundColor='#e9ecef'; this.style.transform='translateY(-2px)';"
+     onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.transform='none';">
+    ✏️ 이 게시글 수정하기
+  </a>
+</div>
+
 <script>
-  function forceAddEditButton() {
-    if (document.getElementById("my-custom-edit-btn")) return;
-    
+  // Chirpy 테마의 본문(content) 맨 아래로 버튼 요소를 안전하게 이동시키는 역할만 수행
+  document.addEventListener("DOMContentLoaded", function() {
+    var btn = document.getElementById("my-custom-edit-btn");
     var contentArea = document.querySelector(".content") || document.querySelector(".post-content") || document.querySelector("article");
-    if (!contentArea) return; 
-
-    // 파일 경로(예: _posts/2026-11-09-xxx.md)에서 확장자를 뺀 순수 파일명(2026-11-09-xxx)만 정확히 추출
-    var rawPath = "{{ page.path }}";
-    var fileName = rawPath.split('/').pop().split('.').shift();
-    var editUrl = "/admin/#/collections/posts/entries/" + fileName;
-    
-    var editBtn = document.createElement("a");
-    editBtn.id = "my-custom-edit-btn"; 
-    editBtn.href = editUrl;
-    editBtn.innerHTML = "✏️ 이 게시글 수정하기";
-    
-    editBtn.setAttribute("style", "display: inline-flex; align-items: center; justify-content: center; margin-top: 40px; margin-bottom: 20px; padding: 10px 20px; background-color: #f8f9fa; color: #555; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);");
-    editBtn.onmouseover = function() { this.style.backgroundColor = "#e9ecef"; this.style.transform = "translateY(-2px)"; };
-    editBtn.onmouseout = function() { this.style.backgroundColor = "#f8f9fa"; this.style.transform = "none"; };
-
-    contentArea.appendChild(editBtn);
-  }
-
-  document.addEventListener("DOMContentLoaded", forceAddEditButton);
-  setInterval(forceAddEditButton, 500); 
+    if (btn && contentArea) {
+      contentArea.appendChild(btn);
+    }
+  });
 </script>
 {% endif %}
