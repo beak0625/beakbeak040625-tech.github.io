@@ -1,5 +1,5 @@
 <style>
-  /* 1. 마크다운 표 100% 확장 및 한글 줄바꿈 완벽 고정 (Chirpy 전용 table-wrapper 강제 해제) */
+  /* 1. 마크다운 표 100% 확장 및 한글 줄바꿈 완벽 고정 */
   .table-wrapper {
     width: 100% !important;
     overflow-x: visible !important;
@@ -21,6 +21,7 @@
     padding: 12px 16px !important;
     word-break: keep-all !important;
     line-height: 1.6 !important;
+    text-align: left !important;
   }
   .post-content table th, .content table th, .table-wrapper table th {
     background-color: #f8f9fa !important;
@@ -28,10 +29,47 @@
     text-align: center !important;
   }
 
-  /* 2. 게시글 본문 문단 사이 기본 줄바꿈 여백 넉넉하게 확보 */
+  /* 2. 본문 문단 사이 기본 줄바꿈 여백 확보 */
   .content p, .post-content p {
     margin-bottom: 1.4rem !important;
     line-height: 1.8 !important;
+  }
+
+  /* 3. 본문 전체 요소(문단, 제목, 리스트) 강제 왼쪽 정렬 및 들여쓰기 완전 제거 */
+  .content, .post-content {
+    text-align: left !important;
+  }
+  .content p, .post-content p,
+  .content h1, .content h2, .content h3, .content h4, .content h5, .content h6,
+  .post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6,
+  .content div, .post-content div {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-indent: 0 !important;
+    text-align: left !important;
+  }
+
+  /* 번호 목록(1. 2. 3.) 및 기호 목록이 오른쪽으로 밀리지 않고 왼쪽 끝선에 딱 맞도록 고정 */
+  .content ul, .content ol,
+  .post-content ul, .post-content ol {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    list-style-position: inside !important;
+    text-align: left !important;
+  }
+  .content li, .post-content li {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    text-indent: 0 !important;
+    text-align: left !important;
+    margin-bottom: 0.6rem !important;
+    line-height: 1.8 !important;
+  }
+  /* 리스트 내부에 생성되는 문단(p)이 줄바꿈되거나 안쪽으로 밀리는 현상 방지 */
+  .content li > p, .post-content li > p {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 </style>
 
