@@ -783,3 +783,70 @@ math: true
 
 </body>
 </html>
+
+
+
+<!-- 수정하기 버튼 클릭 시 기존 글 데이터 자동 불러오기 스크립트 -->
+<script>
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var saved = sessionStorage.getItem('edit_post_data');
+      var fallback = sessionStorage.getItem('edit_post_fallback');
+      if (!saved && !fallback) return;
+
+      // 글쓰기 화면의 제목 입력칸과 본문 입력칸 자동 탐색
+      var titleInput = document.querySelector('input[placeholder*="제목"], input[id*="title"], .title-input') || document.querySelectorAll('input[type="text"]')[0];
+      var tagInput = document.querySelector('input[placeholder*="태그"], input[id*="tag"]');
+      var editorArea = document.querySelector('textarea') || document.querySelector('[contenteditable="true"]');
+
+      if (saved) {
+        var data = JSON.parse(saved);
+        sessionStorage.removeItem('edit_post_data');
+        var raw = data.raw;
+
+        // 마크다운 상단 Front Matter(제목, 태그, 본문) 분리 추출
+        var match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+        if (match) {
+          var yaml = match[1];
+          var body = match[2].trim();
+
+          var titleMatch = yaml.match(/title:\s*["']?(.*?)["']?\s*$/m);
+          var tagMatch = yaml.match(/tags:\s*\[(.*?)\]/m);
+
+          if (titleMatch && titleInput) {
+            titleInput.value = titleMatch[1];
+            titleInput.dispatchEvent(new Event('input'));
+          }
+          if (tagMatch && tagInput) {
+            tagInput.value = tagMatch[1].replace(/["']/g, '');
+            tagInput.dispatchEvent(new Event('input'));
+          }
+          if (editorArea) {
+            if (editorArea.tagName === 'TEXTAREA') {
+              editorArea.value = body;
+            } else {
+              editorArea.innerText = body;
+            }
+            editorArea.dispatchEvent(new Event('input'));
+            editorArea.dispatchEvent(new Event('keyup'));
+          }
+        }
+      } else if (fallback) {
+        var fbData = JSON.parse(fallback);
+        sessionStorage.removeItem('edit_post_fallback');
+        if (titleInput) {
+          titleInput.value = fbData.title;
+          titleInput.dispatchEvent(new Event('input'));
+        }
+        if (editorArea) {
+          if (editorArea.tagName === 'TEXTAREA') {
+            editorArea.value = fbData.body;
+          } else {
+            editorArea.innerText = fbData.body;
+          }
+          editorArea.dispatchEvent(new Event('input'));
+        }
+      }
+    }, 300);
+  });
+</script>
