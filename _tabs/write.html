@@ -1,46 +1,142 @@
+<!-- 게시글 수정 모드: 원본 글 완벽 로드 + 실시간 미리보기 연동 + 기존 파일 덮어쓰기(PUT) 패치 -->
 <script>
-  window.addEventListener('DOMContentLoaded', async function() {
-    var params = new URLSearchParams(window.location.search);
-    var editFile = params.get('edit');
-    if (!editFile) return;
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var editFile = params.get('edit');
+  if (!editFile) return;
 
+  var originalSha = null;
+  var originalFrontMatter = '';
+
+  // 1. GitHub API 통신을 가로채서 새 파일 생성이 아닌 '기존 파일 수정(덮어쓰기)'으로 자동 변환
+  var origFetch = window.fetch;
+  window.fetch = async function(url, options) {
+    if (typeof url === 'string' && url.includes('/contents/_posts/') && options && options.method === 'PUT' && originalSha) {
+      // 파일명이 바뀌어 중복 글이 생성되지 않도록 원래 파일 경로로 고정
+      var baseUrl = url.split('/contents/_posts/')[0];
+      url = baseUrl + '/contents/_posts/' + encodeURIComponent(editFile);
+
+      try {
+        var bodyObj = JSON.parse(options.body);
+        bodyObj.sha = originalSha; // GitHub에서 기존 파일을 덮어쓰기 위해 필수인 sha 값 주입
+        bodyObj.message = 'Update post: ' + editFile;
+        options.body = JSON.stringify(bodyObj);
+      } catch (e) {}
+    }
+    return origFetch.apply(this, arguments);
+  };
+
+  // 2. 에디터 화면에 원본 데이터 채워넣기 (임시저장 덮어쓰기 방지를 위해 반복 주입)
+  function fillEditorFields(title, category, tags, body) {
+    // 제목 입력칸 찾기 (태그 입력칸 제외)
+    var textInputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
+    var titleInput = document.querySelector('input[placeholder*="제목"], #post-title, #title') || 
+                     textInputs.find(function(el) { return !el.placeholder || !el.placeholder.includes('태그'); });
+    
+    // 태그 입력칸 찾기
+    var tagInput = document.querySelector('input[placeholder*="태그"], #post-tags, #tags');
+    
+    // 카테고리 선택칸 찾기
+    var catSelect = document.querySelector('select');
+    
+    // 본문 작성칸 찾기
+    var editorArea = document.querySelector('textarea') || document.querySelector('[contenteditable="true"]');
+
+    if (titleInput && title) {
+      titleInput.value = title;
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    if (tagInput && tags) {
+      tagInput.value = tags;
+      tagInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    if (catSelect && category) {
+      Array.from(catSelect.options).forEach(function(opt) {
+        if (opt.value.includes(category) || opt.text.includes(category)) {
+          catSelect.value = opt.value;
+          catSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    }
+
+    if (editorArea && body !== undefined) {
+      if (editorArea.tagName === 'TEXTAREA') {
+        editorArea.value = body;
+      } else {
+        editorArea.innerText = body;
+      }
+      // 오른쪽 미리보기 화면이 즉시 갱신되도록 모든 입력 이벤트 강제 실행
+      ['input', 'keyup', 'change'].forEach(function(evt) {
+        editorArea.dispatchEvent(new Event(evt, { bubbles: true }));
+      });
+    }
+
+    // 상단 타이틀 및 등록 버튼 문구를 '수정' 모드로 변경
+    document.querySelectorAll('button, a').forEach(function(el) {
+      if (el.innerText.includes('게시글 등록하기')) {
+        el.innerHTML = '☁️ 게시글 수정 완료하기';
+      }
+    });
+  }
+
+  // 3. 페이지 로드 시 GitHub에서 원본 마크다운 파일 가져오기
+  window.addEventListener('load', async function() {
     try {
-      var res = await fetch('https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(editFile));
+      var apiUrl = 'https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(editFile) + '?t=' + Date.now();
+      var res = await origFetch(apiUrl);
       if (!res.ok) return;
       var fileData = await res.json();
-      var raw = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
+      
+      originalSha = fileData.sha;
 
-      var titleInput = document.querySelector('input[placeholder*="제목"], input[id*="title"], .title-input') || document.querySelectorAll('input[type="text"]')[0];
-      var tagInput = document.querySelector('input[placeholder*="태그"], input[id*="tag"]');
-      var editorArea = document.querySelector('textarea') || document.querySelector('[contenteditable="true"]');
+      // 한글 깨짐 없이 Base64 디코딩
+      var binaryStr = atob(fileData.content.replace(/\s/g, ''));
+      var bytes = new Uint8Array(binaryStr.length);
+      for (var i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      var raw = new TextDecoder('utf-8').decode(bytes);
 
+      // 마크다운 상단 머릿말(Front Matter)과 본문 분리
       var match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+      var title = '', category = '', tags = '', body = raw;
+
       if (match) {
         var yaml = match[1];
-        var body = match[2].trim();
+        body = match[2].replace(/^\r?\n/, '');
 
+        // 제목 추출
         var titleMatch = yaml.match(/title:\s*["']?(.*?)["']?\s*$/m);
-        var tagMatch = yaml.match(/tags:\s*\[(.*?)\]/m);
+        if (titleMatch) title = titleMatch[1];
 
-        if (titleMatch && titleInput) {
-          titleInput.value = titleMatch[1];
-          titleInput.dispatchEvent(new Event('input'));
-        }
-        if (tagMatch && tagInput) {
-          tagInput.value = tagMatch[1].replace(/["']/g, '');
-          tagInput.dispatchEvent(new Event('input'));
-        }
-        if (editorArea) {
-          if (editorArea.tagName === 'TEXTAREA') {
-            editorArea.value = body;
-          } else {
-            editorArea.innerText = body;
+        // 카테고리 추출
+        var catMatch = yaml.match(/categories:\s*\[?\s*["']?([^"'\],\r\n]+)["']?/m);
+        if (catMatch) category = catMatch[1].trim();
+
+        // 태그 추출 (배열 형태 및 줄바꿈 형태 모두 대응)
+        var tagBracketMatch = yaml.match(/tags:\s*\[(.*?)\]/m);
+        if (tagBracketMatch) {
+          tags = tagBracketMatch[1].replace(/["']/g, '').split(',').map(function(s) { return s.trim(); }).filter(Boolean).join(', ');
+        } else {
+          var tagListMatch = yaml.match(/tags:\s*\r?\n((?:\s*-\s*.*\r?\n?)+)/m);
+          if (tagListMatch) {
+            tags = tagListMatch[1].split(/\r?\n/).map(function(line) {
+              return line.replace(/^\s*-\s*["']?/, '').replace(/["']?\s*$/, '').trim();
+            }).filter(Boolean).join(', ');
           }
-          editorArea.dispatchEvent(new Event('input'));
         }
       }
+
+      // 에디터의 자체 '임시저장 불러오기'가 빈 화면으로 덮어쓰는 것을 이기기 위해 0.1초, 0.4초, 0.8초 3연속 주입
+      setTimeout(function() { fillEditorFields(title, category, tags, body); }, 100);
+      setTimeout(function() { fillEditorFields(title, category, tags, body); }, 400);
+      setTimeout(function() { fillEditorFields(title, category, tags, body); }, 800);
+
     } catch (e) {
-      console.error('원본 글 로드 실패:', e);
+      console.error('원본 글 불러오기 오류:', e);
     }
   });
+})();
 </script>
