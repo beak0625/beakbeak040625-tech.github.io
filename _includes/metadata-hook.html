@@ -1,63 +1,133 @@
-<!-- 마크다운 표 스타일 유지 -->
 <style>
-  .post-content table, .content table {
+  /* 1. 마크다운 표 100% 확장 및 한글 줄바꿈 완벽 고정 (Chirpy 전용 table-wrapper 강제 해제) */
+  .table-wrapper {
+    width: 100% !important;
+    overflow-x: visible !important;
+  }
+  .table-wrapper > table,
+  .post-content table,
+  .content table,
+  article table {
     width: 100% !important;
     display: table !important;
     border-collapse: collapse !important;
     margin-bottom: 24px !important;
+    table-layout: auto !important;
   }
   .post-content table th, .post-content table td,
-  .content table th, .content table td {
+  .content table th, .content table td,
+  .table-wrapper table th, .table-wrapper table td {
     border: 1px solid #ddd !important;
     padding: 12px 16px !important;
     word-break: keep-all !important;
     line-height: 1.6 !important;
   }
-  .post-content table th, .content table th {
+  .post-content table th, .content table th, .table-wrapper table th {
     background-color: #f8f9fa !important;
     font-weight: bold !important;
     text-align: center !important;
   }
 
-  /* 💡 화면 왼쪽 아래에 무조건 떠 있는 수정 버튼 스타일 (테마 무시) */
-  #floating-edit-btn {
-    position: fixed;
-    bottom: 30px;
-    left: 30px;
-    z-index: 999999; /* 화면 최상단에 무조건 노출 */
-    background-color: #222;
-    color: #fff !important;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-weight: bold;
-    font-size: 15px;
-    text-decoration: none;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: 0.2s;
-  }
-  #floating-edit-btn:hover {
-    background-color: #555;
-    transform: scale(1.05);
+  /* 2. 게시글 본문 문단 사이 기본 줄바꿈 여백 넉넉하게 확보 */
+  .content p, .post-content p {
+    margin-bottom: 1.4rem !important;
+    line-height: 1.8 !important;
   }
 </style>
 
-<!-- 게시글 수정 버튼 화면 전체에 강제 부착 -->
-{% if page.layout == 'post' %}
 <script>
-  setInterval(function() {
-    // 버튼이 없고 화면(body)이 존재하면 무조건 생성
-    if (!document.getElementById("floating-edit-btn") && document.body) {
-      var btn = document.createElement("a");
-      btn.id = "floating-edit-btn";
-      
-      // Liquid로 파일명 완벽 추출
-      var fileName = "{{ page.path | split: '/' | last | split: '.' | first }}";
-      btn.href = "/admin/#/collections/posts/entries/" + fileName;
-      btn.innerHTML = "✏️ 이 글 수정하기";
-      
-      // 본문 위치 찾을 필요 없이 화면(body)에 직접 꽂아넣음
-      document.body.appendChild(btn);
+  /* 3. Chirpy 화면 전환(PJAX)을 완벽히 뚫고 게시글 하단에 수정 버튼을 꽂아넣는 스크립트 */
+  (function() {
+    function manageEditButton() {
+      // 현재 주소가 게시글(/posts/...)인지 확인
+      var path = window.location.pathname;
+      var isPostPage = path.indexOf('/posts/') !== -1;
+      var existingBtn = document.getElementById('custom-post-edit-wrapper');
+
+      // 게시글이 아니면 버튼 숨김
+      if (!isPostPage) {
+        if (existingBtn) existingBtn.remove();
+        return;
+      }
+
+      // 이미 버튼이 달려있으면 중복 생성 안 함
+      if (existingBtn) return;
+
+      // Chirpy 테마의 본문 영역 또는 하단 꼬리말 영역 탐색
+      var target = document.querySelector('.post-tail-wrapper') || 
+                   document.querySelector('.content') || 
+                   document.querySelector('.post-content') || 
+                   document.querySelector('article');
+      if (!target) return;
+
+      // URL에서 현재 글의 고유 주소(slug) 추출
+      var parts = path.split('/').filter(Boolean);
+      var slug = decodeURIComponent(parts[parts.length - 1]);
+
+      // 버튼 박스 생성
+      var wrapper = document.createElement('div');
+      wrapper.id = 'custom-post-edit-wrapper';
+      wrapper.style.cssText = 'margin: 40px 0 20px 0; padding-top: 20px; border-top: 1px solid #eee; text-align: right;';
+
+      var btn = document.createElement('a');
+      btn.href = 'javascript:void(0);';
+      btn.innerHTML = '✏️ 이 게시글 수정하기';
+      btn.style.cssText = 'display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; background-color: #3b2818; color: #fff !important; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; transition: 0.2s;';
+
+      btn.onmouseover = function() { this.style.backgroundColor = '#593d25'; };
+      btn.onmouseout = function() { this.style.backgroundColor = '#3b2818'; };
+
+      // 클릭 시 GitHub API로 원본 마크다운 파일을 찾아 글쓰기(/write/) 페이지로 전달
+      btn.onclick = async function() {
+        btn.innerHTML = '⏳ 원본 글 불러오는 중...';
+        try {
+          var res = await fetch('https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts');
+          var files = await res.json();
+          
+          // 파일명이 현재 글의 제목(slug)과 일치하는 파일 찾기
+          var matched = files.find(function(f) {
+            return f.name.replace(/\.md$/, '').endsWith(slug) || f.name.indexOf(slug) !== -1;
+          });
+
+          // 만약 파일명이 한글/영문 차이로 안 찾아질 경우 현재 글 화면의 내용을 그대로 추출해 넘김
+          if (!matched) {
+            var postTitle = document.querySelector('h1') ? document.querySelector('h1').innerText.trim() : '';
+            var postBody = document.querySelector('.content') ? document.querySelector('.content').innerText : '';
+            sessionStorage.setItem('edit_post_fallback', JSON.stringify({ title: postTitle, body: postBody }));
+            window.location.href = '/write/?mode=edit';
+            return;
+          }
+
+          // 찾은 원본 파일의 데이터를 가져와서 브라우저 임시저장소에 보관 후 글쓰기 창으로 이동
+          var fileRes = await fetch(matched.url);
+          var fileData = await fileRes.json();
+          var rawContent = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
+
+          sessionStorage.setItem('edit_post_data', JSON.stringify({
+            name: matched.name,
+            path: matched.path,
+            sha: fileData.sha,
+            raw: rawContent
+          }));
+
+          window.location.href = '/write/?edit=' + encodeURIComponent(matched.name);
+        } catch (e) {
+          window.location.href = '/write/';
+        }
+      };
+
+      wrapper.appendChild(btn);
+
+      // 하단 태그/공유 영역(.post-tail-wrapper) 바로 위에 깔끔하게 부착
+      if (target.classList && target.classList.contains('post-tail-wrapper')) {
+        target.parentNode.insertBefore(wrapper, target);
+      } else {
+        target.appendChild(wrapper);
+      }
     }
-  }, 300); // 0.3초마다 끈질기게 확인
+
+    // 페이지 첫 로드 및 Chirpy 테마의 비동기 화면 이동마다 0.4초 간격으로 감시하여 무조건 출력
+    document.addEventListener('DOMContentLoaded', manageEditButton);
+    setInterval(manageEditButton, 400);
+  })();
 </script>
-{% endif %}
