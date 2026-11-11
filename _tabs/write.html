@@ -1,3 +1,10 @@
+---
+title: 글쓰기
+icon: fas fa-pen
+order: 5
+---
+
+
 <!-- 게시글 수정 모드: 원본 글 완벽 로드 + 실시간 미리보기 연동 + 기존 파일 덮어쓰기(PUT) 패치 -->
 <script>
 (function() {
@@ -138,5 +145,115 @@
       console.error('원본 글 불러오기 오류:', e);
     }
   });
+})();
+</script>
+
+<script>
+(function() {
+  // 수정 버튼을 눌러 넘어온 원본 데이터 확인
+  var rawData = localStorage.getItem('chirpy_edit_raw');
+  var editFile = localStorage.getItem('chirpy_edit_filename');
+  if (!rawData || !editFile) return;
+
+  // 사용 후 찌꺼기가 남지 않도록 즉시 비우기 (새로고침 대비 3초 유지)
+  setTimeout(function() {
+    localStorage.removeItem('chirpy_edit_raw');
+    localStorage.removeItem('chirpy_edit_filename');
+  }, 3000);
+
+  // Front Matter(머리말)와 본문 분리
+  var match = rawData.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  var title = '', category = '', tags = '', body = rawData;
+
+  if (match) {
+    var yaml = match[1];
+    body = match[2].replace(/^\r?\n/, '');
+
+    var titleMatch = yaml.match(/title:\s*["']?(.*?)["']?\s*$/m);
+    if (titleMatch) title = titleMatch[1];
+
+    var catMatch = yaml.match(/categories:\s*\[?\s*["']?([^"'\],\r\n]+)["']?/m);
+    if (catMatch) category = catMatch[1].trim();
+
+    var tagBracket = yaml.match(/tags:\s*\[(.*?)\]/m);
+    if (tagBracket) {
+      tags = tagBracket[1].replace(/["']/g, '').split(',').map(function(s){return s.trim();}).filter(Boolean).join(', ');
+    }
+  }
+
+  // 에디터의 자체 '자동 임시저장(빈 화면)'이 덮어쓰지 못하도록 기존 임시저장소를 원본 글로 먼저 덮어쓰기
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k !== 'chirpy_edit_raw' && k !== 'chirpy_edit_filename' && !k.toLowerCase().includes('token') && !k.toLowerCase().includes('github')) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch(e) {}
+
+  function applyToEditor() {
+    var inputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
+    var titleEl = document.querySelector('input[placeholder*="제목"], #title, #post-title') || inputs[0];
+    var tagEl = document.querySelector('input[placeholder*="태그"], #tags, #post-tags') || inputs[1];
+    var selectEl = document.querySelector('select');
+    var bodyEl = document.querySelector('textarea') || document.querySelector('[contenteditable="true"]');
+
+    if (titleEl && title) {
+      titleEl.value = title;
+      titleEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (tagEl && tags) {
+      tagEl.value = tags;
+      tagEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (selectEl && category) {
+      Array.from(selectEl.options).forEach(function(opt) {
+        if (opt.value.includes(category) || opt.text.includes(category)) {
+          selectEl.value = opt.value;
+          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    }
+    if (bodyEl) {
+      if (bodyEl.tagName === 'TEXTAREA') {
+        bodyEl.value = body;
+      } else {
+        bodyEl.innerText = body;
+      }
+      bodyEl.dispatchEvent(new Event('input', { bubbles: true }));
+      bodyEl.dispatchEvent(new Event('keyup', { bubbles: true }));
+    }
+
+    document.querySelectorAll('button, a').forEach(function(btn) {
+      if (btn.innerText.includes('게시글 등록하기')) {
+        btn.innerHTML = '☁️ 게시글 수정 완료하기';
+      }
+    });
+  }
+
+  // 에디터 초기화 타이밍을 완벽히 이기도록 0.1초~1.2초 동안 연속 주입
+  [50, 200, 500, 900, 1300].forEach(function(ms) {
+    setTimeout(applyToEditor, ms);
+  });
+
+  // 등록 버튼 클릭 시 새 파일이 아닌 '기존 파일 덮어쓰기(sha 포함)'로 자동 변환
+  var origFetch = window.fetch;
+  window.fetch = async function(url, options) {
+    if (typeof url === 'string' && url.includes('/contents/_posts/') && options && options.method === 'PUT') {
+      try {
+        var repoBase = url.split('/contents/_posts/')[0];
+        var targetUrl = repoBase + '/contents/_posts/' + encodeURIComponent(editFile);
+        var checkRes = await origFetch(targetUrl, { headers: options.headers });
+        if (checkRes.ok) {
+          var existingFile = await checkRes.json();
+          var bodyObj = JSON.parse(options.body);
+          bodyObj.sha = existingFile.sha;
+          options.body = JSON.stringify(bodyObj);
+          url = targetUrl;
+        }
+      } catch(e) {}
+    }
+    return origFetch.call(this, url, options);
+  };
 })();
 </script>
