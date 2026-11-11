@@ -1,5 +1,5 @@
 <style>
-  /* 1. 마크다운 표 100% 확장 및 한글 줄바꿈 완벽 고정 */
+  /* 1. 마크다운 표 100% 확장 및 한글 줄바꿈 고정 */
   .table-wrapper {
     width: 100% !important;
     overflow-x: visible !important;
@@ -69,108 +69,21 @@
     padding: 0 !important;
   }
 
-  /* 4. 게시글 페이지 진입 시 우측 사이드바(최근글/태그) 숨김 & 본문 폭 100% 확장 */
-  body.is-post-page #panel-wrapper {
+  /* 4. [순수 CSS] 게시글(article)이 있는 페이지에서는 우측 사이드바(최근글/태그) 완전 숨김 & 본문 폭 100% 확장 */
+  body:has(main article) #panel-wrapper,
+  #main-wrapper:has(article) #panel-wrapper,
+  .row:has(article) #panel-wrapper,
+  .row:has(.post-tail-wrapper) #panel-wrapper {
     display: none !important;
+    width: 0 !important;
   }
-  body.is-post-page #main-wrapper > .container > .row > main {
+
+  body:has(main article) main,
+  #main-wrapper:has(article) main,
+  .row:has(article) > main,
+  .row:has(.post-tail-wrapper) > main {
     flex: 0 0 100% !important;
     max-width: 100% !important;
     width: 100% !important;
   }
 </style>
-
-<script>
-  /* 5. 게시글 페이지 감지(우측 패널 제어) 및 수정 버튼 자동 생성 스크립트 */
-  (function() {
-    function managePostLayoutAndButton() {
-      var path = window.location.pathname;
-      var isPostPage = path.indexOf('/posts/') !== -1;
-
-      // 게시글일 때만 body에 클래스를 붙여 우측 패널을 숨기고 본문을 넓힘 (홈 화면에선 원상복구)
-      if (document.body) {
-        if (isPostPage) {
-          document.body.classList.add('is-post-page');
-        } else {
-          document.body.classList.remove('is-post-page');
-        }
-      }
-
-      var existingBtn = document.getElementById('custom-post-edit-wrapper');
-
-      if (!isPostPage) {
-        if (existingBtn) existingBtn.remove();
-        return;
-      }
-
-      if (existingBtn) return;
-
-      var target = document.querySelector('.post-tail-wrapper') || 
-                   document.querySelector('.content') || 
-                   document.querySelector('.post-content') || 
-                   document.querySelector('article');
-      if (!target) return;
-
-      var parts = path.split('/').filter(Boolean);
-      var slug = decodeURIComponent(parts[parts.length - 1]);
-
-      var wrapper = document.createElement('div');
-      wrapper.id = 'custom-post-edit-wrapper';
-      wrapper.style.cssText = 'margin: 40px 0 20px 0; padding-top: 20px; border-top: 1px solid #eee; text-align: right;';
-
-      var btn = document.createElement('a');
-      btn.href = 'javascript:void(0);';
-      btn.innerHTML = '✏️ 이 게시글 수정하기';
-      btn.style.cssText = 'display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; background-color: #3b2818; color: #fff !important; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; transition: 0.2s;';
-
-      btn.onmouseover = function() { this.style.backgroundColor = '#593d25'; };
-      btn.onmouseout = function() { this.style.backgroundColor = '#3b2818'; };
-
-      btn.onclick = async function() {
-        btn.innerHTML = '⏳ 원본 글 불러오는 중...';
-        try {
-          var res = await fetch('https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts');
-          var files = await res.json();
-          
-          var matched = files.find(function(f) {
-            return f.name.replace(/\.md$/, '').endsWith(slug) || f.name.indexOf(slug) !== -1;
-          });
-
-          if (!matched) {
-            var postTitle = document.querySelector('h1') ? document.querySelector('h1').innerText.trim() : '';
-            var postBody = document.querySelector('.content') ? document.querySelector('.content').innerText : '';
-            sessionStorage.setItem('edit_post_fallback', JSON.stringify({ title: postTitle, body: postBody }));
-            window.location.href = '/write/?mode=edit';
-            return;
-          }
-
-          var fileRes = await fetch(matched.url);
-          var fileData = await fileRes.json();
-          var rawContent = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
-
-          sessionStorage.setItem('edit_post_data', JSON.stringify({
-            name: matched.name,
-            path: matched.path,
-            sha: fileData.sha,
-            raw: rawContent
-          }));
-
-          window.location.href = '/write/?edit=' + encodeURIComponent(matched.name);
-        } catch (e) {
-          window.location.href = '/write/';
-        }
-      };
-
-      wrapper.appendChild(btn);
-
-      if (target.classList && target.classList.contains('post-tail-wrapper')) {
-        target.parentNode.insertBefore(wrapper, target);
-      } else {
-        target.appendChild(wrapper);
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', managePostLayoutAndButton);
-    setInterval(managePostLayoutAndButton, 200);
-  })();
-</script>
