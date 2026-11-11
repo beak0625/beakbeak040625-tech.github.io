@@ -1,259 +1,182 @@
----
-title: 글쓰기
-icon: fas fa-pen
-order: 5
----
+require 'base64'
 
+Jekyll::Hooks.register :posts, :post_render do |post|
+  filename = File.basename(post.path)
+  raw_markdown = File.read(post.path, encoding: 'UTF-8')
+  encoded_raw = Base64.strict_encode64(raw_markdown)
 
-<!-- 게시글 수정 모드: 원본 글 완벽 로드 + 실시간 미리보기 연동 + 기존 파일 덮어쓰기(PUT) 패치 -->
-<script>
-(function() {
-  var params = new URLSearchParams(window.location.search);
-  var editFile = params.get('edit');
-  if (!editFile) return;
+  injected_html = <<~HTML
+    <div id="custom-edit-btn-box" style="margin: 40px 0 20px 0; padding-top: 20px; border-top: 1px solid #eee; text-align: right;">
+      <button type="button" onclick="window.openDirectPostEditor()" style="display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; background-color: #3b2818; color: #ffffff !important; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer;">
+        ✏️ 이 게시글 수정하기
+      </button>
+    </div>
 
-  var originalSha = null;
-  var originalFrontMatter = '';
+    <div id="direct-editor-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f3ede2; z-index:999999; overflow:hidden; font-family:sans-serif; color:#222;">
+      <div style="max-width:1400px; height:94vh; margin:3vh auto; background:#fdfbf7; border:1px solid #e2d9c8; border-radius:14px; display:flex; flex-direction:column; padding:20px 24px; box-shadow:0 10px 30px rgba(0,0,0,0.18);">
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:14px; border-bottom:1px solid #e6dec8;">
+          <div style="font-size:20px; font-weight:800; color:#3b2818;">✒️ 블로그 게시글 수정 (${filename})</div>
+          <div style="display:flex; gap:10px;">
+            <button type="button" onclick="window.setGhToken()" style="padding:8px 14px; background:#fff; border:1px solid #ccc; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;">🔑 GitHub 연동 설정</button>
+            <button type="button" onclick="document.getElementById('direct-editor-modal').style.display='none'" style="padding:8px 14px; background:#fff; border:1px solid #ccc; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;">✖ 닫기 (취소)</button>
+            <button type="button" id="direct-save-btn" onclick="window.saveEditedPost()" style="padding:8px 18px; background:#7c5a3f; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:14px;">☁️ 게시글 수정 등록하기</button>
+          </div>
+        </div>
 
-  // 1. GitHub API 통신을 가로채서 새 파일 생성이 아닌 '기존 파일 수정(덮어쓰기)'으로 자동 변환
-  var origFetch = window.fetch;
-  window.fetch = async function(url, options) {
-    if (typeof url === 'string' && url.includes('/contents/_posts/') && options && options.method === 'PUT' && originalSha) {
-      // 파일명이 바뀌어 중복 글이 생성되지 않도록 원래 파일 경로로 고정
-      var baseUrl = url.split('/contents/_posts/')[0];
-      url = baseUrl + '/contents/_posts/' + encodeURIComponent(editFile);
+        <div style="display:grid; grid-template-columns: 1.2fr 3fr 1.5fr; gap:12px; margin:14px 0;">
+          <input id="de-category" type="text" placeholder="카테고리 (예: Paper Review)" style="padding:10px 12px; border:1px solid #d8cebe; border-radius:8px; font-size:14px; background:#fff;">
+          <input id="de-title" type="text" placeholder="게시글 제목" style="padding:10px 12px; border:1px solid #d8cebe; border-radius:8px; font-size:15px; font-weight:bold; background:#fff;">
+          <input id="de-tags" type="text" placeholder="태그 (쉼표로 구분)" style="padding:10px 12px; border:1px solid #d8cebe; border-radius:8px; font-size:14px; background:#fff;">
+        </div>
 
-      try {
-        var bodyObj = JSON.parse(options.body);
-        bodyObj.sha = originalSha; // GitHub에서 기존 파일을 덮어쓰기 위해 필수인 sha 값 주입
-        bodyObj.message = 'Update post: ' + editFile;
-        options.body = JSON.stringify(bodyObj);
-      } catch (e) {}
-    }
-    return origFetch.apply(this, arguments);
-  };
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; flex:1; min-height:0;">
+          <textarea id="de-body" oninput="window.updateDirectPreview()" style="width:100%; height:100%; padding:16px; border:1px solid #d8cebe; border-radius:8px; resize:none; font-family:monospace; font-size:14px; line-height:1.7; background:#fff; color:#222; box-sizing:border-box;"></textarea>
+          <div id="de-preview" class="content" style="width:100%; height:100%; padding:16px; border:1px solid #d8cebe; border-radius:8px; overflow-y:auto; background:#fff; box-sizing:border-box; text-align:left;"></div>
+        </div>
 
-  // 2. 에디터 화면에 원본 데이터 채워넣기 (임시저장 덮어쓰기 방지를 위해 반복 주입)
-  function fillEditorFields(title, category, tags, body) {
-    // 제목 입력칸 찾기 (태그 입력칸 제외)
-    var textInputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
-    var titleInput = document.querySelector('input[placeholder*="제목"], #post-title, #title') || 
-                     textInputs.find(function(el) { return !el.placeholder || !el.placeholder.includes('태그'); });
-    
-    // 태그 입력칸 찾기
-    var tagInput = document.querySelector('input[placeholder*="태그"], #post-tags, #tags');
-    
-    // 카테고리 선택칸 찾기
-    var catSelect = document.querySelector('select');
-    
-    // 본문 작성칸 찾기
-    var editorArea = document.querySelector('textarea') || document.querySelector('[contenteditable="true"]');
+      </div>
+    </div>
 
-    if (titleInput && title) {
-      titleInput.value = title;
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    <script>
+    (function() {
+      var encoded = "#{encoded_raw}";
+      var targetFile = "#{filename}";
+      var origFrontMatter = "";
 
-    if (tagInput && tags) {
-      tagInput.value = tags;
-      tagInput.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+      function decodeRaw() {
+        var bin = atob(encoded);
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder('utf-8').decode(bytes);
+      }
 
-    if (catSelect && category) {
-      Array.from(catSelect.options).forEach(function(opt) {
-        if (opt.value.includes(category) || opt.text.includes(category)) {
-          catSelect.value = opt.value;
-          catSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      window.updateDirectPreview = function() {
+        var md = document.getElementById('de-body').value;
+        var html = md
+          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+          .replace(/\\*\\*(.*?)\\*\\*/gim, '<strong>$1</strong>')
+          .replace(/\\n/gim, '<br>');
+        document.getElementById('de-preview').innerHTML = html;
+      };
+
+      window.openDirectPostEditor = function() {
+        var raw = decodeRaw();
+        var match = raw.match(/^---\\r?\\n([\\s\\S]*?)\\r?\\n---\\r?\\n([\\s\\S]*)$/);
+        var title = "", cat = "", tags = "", body = raw;
+
+        if (match) {
+          origFrontMatter = match[1];
+          body = match[2].replace(/^\\r?\\n/, '');
+
+          var tm = origFrontMatter.match(/title:\\s*["']?(.*?)["']?\\s*$/m);
+          if (tm) title = tm[1];
+
+          var cm = origFrontMatter.match(/categories:\\s*\\[?\\s*["']?([^"'\\],\\r\\n]+)["']?/m);
+          if (cm) cat = cm[1].trim();
+
+          var tgm = origFrontMatter.match(/tags:\\s*\\[(.*?)\\]/m);
+          if (tgm) tags = tgm[1].replace(/["']/g, '').trim();
         }
-      });
-    }
 
-    if (editorArea && body !== undefined) {
-      if (editorArea.tagName === 'TEXTAREA') {
-        editorArea.value = body;
-      } else {
-        editorArea.innerText = body;
-      }
-      // 오른쪽 미리보기 화면이 즉시 갱신되도록 모든 입력 이벤트 강제 실행
-      ['input', 'keyup', 'change'].forEach(function(evt) {
-        editorArea.dispatchEvent(new Event(evt, { bubbles: true }));
-      });
-    }
+        document.getElementById('de-title').value = title;
+        document.getElementById('de-category').value = cat;
+        document.getElementById('de-tags').value = tags;
+        document.getElementById('de-body').value = body;
+        window.updateDirectPreview();
+        document.getElementById('direct-editor-modal').style.display = 'block';
+      };
 
-    // 상단 타이틀 및 등록 버튼 문구를 '수정' 모드로 변경
-    document.querySelectorAll('button, a').forEach(function(el) {
-      if (el.innerText.includes('게시글 등록하기')) {
-        el.innerHTML = '☁️ 게시글 수정 완료하기';
-      }
-    });
-  }
+      window.setGhToken = function() {
+        var current = localStorage.getItem('gh_pat_token') || '';
+        var input = prompt('GitHub Personal Access Token (repo 권한)을 입력해주세요:', current);
+        if (input !== null && input.trim() !== '') {
+          localStorage.setItem('gh_pat_token', input.trim());
+          alert('GitHub 토큰이 저장되었습니다.');
+        }
+      };
 
-  // 3. 페이지 로드 시 GitHub에서 원본 마크다운 파일 가져오기
-  window.addEventListener('load', async function() {
-    try {
-      var apiUrl = 'https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(editFile) + '?t=' + Date.now();
-      var res = await origFetch(apiUrl);
-      if (!res.ok) return;
-      var fileData = await res.json();
-      
-      originalSha = fileData.sha;
-
-      // 한글 깨짐 없이 Base64 디코딩
-      var binaryStr = atob(fileData.content.replace(/\s/g, ''));
-      var bytes = new Uint8Array(binaryStr.length);
-      for (var i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-      }
-      var raw = new TextDecoder('utf-8').decode(bytes);
-
-      // 마크다운 상단 머릿말(Front Matter)과 본문 분리
-      var match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-      var title = '', category = '', tags = '', body = raw;
-
-      if (match) {
-        var yaml = match[1];
-        body = match[2].replace(/^\r?\n/, '');
-
-        // 제목 추출
-        var titleMatch = yaml.match(/title:\s*["']?(.*?)["']?\s*$/m);
-        if (titleMatch) title = titleMatch[1];
-
-        // 카테고리 추출
-        var catMatch = yaml.match(/categories:\s*\[?\s*["']?([^"'\],\r\n]+)["']?/m);
-        if (catMatch) category = catMatch[1].trim();
-
-        // 태그 추출 (배열 형태 및 줄바꿈 형태 모두 대응)
-        var tagBracketMatch = yaml.match(/tags:\s*\[(.*?)\]/m);
-        if (tagBracketMatch) {
-          tags = tagBracketMatch[1].replace(/["']/g, '').split(',').map(function(s) { return s.trim(); }).filter(Boolean).join(', ');
-        } else {
-          var tagListMatch = yaml.match(/tags:\s*\r?\n((?:\s*-\s*.*\r?\n?)+)/m);
-          if (tagListMatch) {
-            tags = tagListMatch[1].split(/\r?\n/).map(function(line) {
-              return line.replace(/^\s*-\s*["']?/, '').replace(/["']?\s*$/, '').trim();
-            }).filter(Boolean).join(', ');
+      window.saveEditedPost = async function() {
+        var token = localStorage.getItem('gh_pat_token');
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          var v = localStorage.getItem(k);
+          if (!token && v && (v.startsWith('ghp_') || v.startsWith('github_pat_'))) {
+            token = v;
           }
         }
-      }
-
-      // 에디터의 자체 '임시저장 불러오기'가 빈 화면으로 덮어쓰는 것을 이기기 위해 0.1초, 0.4초, 0.8초 3연속 주입
-      setTimeout(function() { fillEditorFields(title, category, tags, body); }, 100);
-      setTimeout(function() { fillEditorFields(title, category, tags, body); }, 400);
-      setTimeout(function() { fillEditorFields(title, category, tags, body); }, 800);
-
-    } catch (e) {
-      console.error('원본 글 불러오기 오류:', e);
-    }
-  });
-})();
-</script>
-
-<script>
-(function() {
-  // 수정 버튼을 눌러 넘어온 원본 데이터 확인
-  var rawData = localStorage.getItem('chirpy_edit_raw');
-  var editFile = localStorage.getItem('chirpy_edit_filename');
-  if (!rawData || !editFile) return;
-
-  // 사용 후 찌꺼기가 남지 않도록 즉시 비우기 (새로고침 대비 3초 유지)
-  setTimeout(function() {
-    localStorage.removeItem('chirpy_edit_raw');
-    localStorage.removeItem('chirpy_edit_filename');
-  }, 3000);
-
-  // Front Matter(머리말)와 본문 분리
-  var match = rawData.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  var title = '', category = '', tags = '', body = rawData;
-
-  if (match) {
-    var yaml = match[1];
-    body = match[2].replace(/^\r?\n/, '');
-
-    var titleMatch = yaml.match(/title:\s*["']?(.*?)["']?\s*$/m);
-    if (titleMatch) title = titleMatch[1];
-
-    var catMatch = yaml.match(/categories:\s*\[?\s*["']?([^"'\],\r\n]+)["']?/m);
-    if (catMatch) category = catMatch[1].trim();
-
-    var tagBracket = yaml.match(/tags:\s*\[(.*?)\]/m);
-    if (tagBracket) {
-      tags = tagBracket[1].replace(/["']/g, '').split(',').map(function(s){return s.trim();}).filter(Boolean).join(', ');
-    }
-  }
-
-  // 에디터의 자체 '자동 임시저장(빈 화면)'이 덮어쓰지 못하도록 기존 임시저장소를 원본 글로 먼저 덮어쓰기
-  try {
-    for (var i = 0; i < localStorage.length; i++) {
-      var k = localStorage.key(i);
-      if (k && k !== 'chirpy_edit_raw' && k !== 'chirpy_edit_filename' && !k.toLowerCase().includes('token') && !k.toLowerCase().includes('github')) {
-        localStorage.removeItem(k);
-      }
-    }
-  } catch(e) {}
-
-  function applyToEditor() {
-    var inputs = Array.from(document.querySelectorAll('input[type="text"], input:not([type])'));
-    var titleEl = document.querySelector('input[placeholder*="제목"], #title, #post-title') || inputs[0];
-    var tagEl = document.querySelector('input[placeholder*="태그"], #tags, #post-tags') || inputs[1];
-    var selectEl = document.querySelector('select');
-    var bodyEl = document.querySelector('textarea') || document.querySelector('[contenteditable="true"]');
-
-    if (titleEl && title) {
-      titleEl.value = title;
-      titleEl.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    if (tagEl && tags) {
-      tagEl.value = tags;
-      tagEl.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    if (selectEl && category) {
-      Array.from(selectEl.options).forEach(function(opt) {
-        if (opt.value.includes(category) || opt.text.includes(category)) {
-          selectEl.value = opt.value;
-          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        if (!token) {
+          token = prompt('글 수정을 위해 GitHub 토큰(ghp_... 또는 github_pat_...)을 한 번 입력해주세요:');
+          if (!token) return;
+          localStorage.setItem('gh_pat_token', token.trim());
         }
-      });
-    }
-    if (bodyEl) {
-      if (bodyEl.tagName === 'TEXTAREA') {
-        bodyEl.value = body;
-      } else {
-        bodyEl.innerText = body;
-      }
-      bodyEl.dispatchEvent(new Event('input', { bubbles: true }));
-      bodyEl.dispatchEvent(new Event('keyup', { bubbles: true }));
-    }
 
-    document.querySelectorAll('button, a').forEach(function(btn) {
-      if (btn.innerText.includes('게시글 등록하기')) {
-        btn.innerHTML = '☁️ 게시글 수정 완료하기';
-      }
-    });
-  }
+        var btn = document.getElementById('direct-save-btn');
+        btn.innerText = '⏳ 수정 반영 중...';
+        btn.disabled = true;
 
-  // 에디터 초기화 타이밍을 완벽히 이기도록 0.1초~1.2초 동안 연속 주입
-  [50, 200, 500, 900, 1300].forEach(function(ms) {
-    setTimeout(applyToEditor, ms);
-  });
+        try {
+          var title = document.getElementById('de-title').value.trim();
+          var cat = document.getElementById('de-category').value.trim();
+          var tags = document.getElementById('de-tags').value.split(',').map(function(s){return s.trim();}).filter(Boolean).join(', ');
+          var body = document.getElementById('de-body').value;
 
-  // 등록 버튼 클릭 시 새 파일이 아닌 '기존 파일 덮어쓰기(sha 포함)'로 자동 변환
-  var origFetch = window.fetch;
-  window.fetch = async function(url, options) {
-    if (typeof url === 'string' && url.includes('/contents/_posts/') && options && options.method === 'PUT') {
-      try {
-        var repoBase = url.split('/contents/_posts/')[0];
-        var targetUrl = repoBase + '/contents/_posts/' + encodeURIComponent(editFile);
-        var checkRes = await origFetch(targetUrl, { headers: options.headers });
-        if (checkRes.ok) {
-          var existingFile = await checkRes.json();
-          var bodyObj = JSON.parse(options.body);
-          bodyObj.sha = existingFile.sha;
-          options.body = JSON.stringify(bodyObj);
-          url = targetUrl;
+          var dateMatch = origFrontMatter.match(/date:\\s*(.*?)\\s*$/m);
+          var dateStr = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 19).replace('T', ' ') + ' +0900';
+
+          var newMd = "---\\n" +
+                      "title: \\"" + title.replace(/"/g, '\\\\"') + "\\"\\n" +
+                      "date: " + dateStr + "\\n" +
+                      "categories: [" + (cat ? "\\"" + cat + "\\"" : "") + "]\\n" +
+                      "tags: [" + tags + "]\\n" +
+                      "math: true\\n" +
+                      "---\\n\\n" + body;
+
+          var apiUrl = 'https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(targetFile);
+          
+          var getRes = await fetch(apiUrl, {
+            headers: { 'Authorization': 'token ' + token }
+          });
+          var getJson = await getRes.json();
+          var sha = getJson.sha;
+
+          var utf8Bytes = new TextEncoder().encode(newMd);
+          var binary = '';
+          for (var j = 0; j < utf8Bytes.length; j++) binary += String.fromCharCode(utf8Bytes[j]);
+          var b64Content = btoa(binary);
+
+          var putRes = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': 'token ' + token,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: 'Update post: ' + targetFile,
+              content: b64Content,
+              sha: sha
+            })
+          });
+
+          if (putRes.ok) {
+            alert('수정이 완료되었습니다! 약 1분 뒤 빌드가 반영됩니다.');
+            document.getElementById('direct-editor-modal').style.display = 'none';
+          } else {
+            var err = await putRes.json();
+            alert('저장 실패: ' + (err.message || '토큰 권한을 확인해주세요.'));
+          }
+        } catch (e) {
+          alert('오류 발생: ' + e.message);
+        } finally {
+          btn.innerText = '☁️ 게시글 수정 등록하기';
+          btn.disabled = false;
         }
-      } catch(e) {}
-    }
-    return origFetch.call(this, url, options);
-  };
-})();
-</script>
+      };
+    })();
+    </script>
+  HTML
+
+  post.output = post.output.sub('<div class="post-tail-wrapper', injected_html + '<div class="post-tail-wrapper')
+end
