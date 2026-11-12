@@ -61,6 +61,8 @@ https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detect
 <br> <br>
 저자들은 연구의 동기를 설명하기 위해 실제 장비(ASUS RT-AC68U 등)의 lighttpd 기반 웹 서비스에서 발견한 CVE-2025-2492 취약점을 예시로 제시한다. 이 백엔드 바이너리는 설정 파일과 요청의 User-Agent 헤더에 따라 Basic 인증과 NTLM 인증 두 가지 루틴을 모두 지원한다.
 <br> <br>
+![이미지 설명](/assets/search.png)
+<br>
 취약점 발생 원리:공격자는 요청 헤더의 User-Agent를 NTLM용인 WebDrive로 맞추고, Authorization 헤더는 Basic 인증용 데이터로 섞어서 보냈다. 이 조작된 요청을 받은 백엔드는 두 개의 독립적인 변수를 다르게 처리하며 오작동을 일으킨다. 첫째, User-Agent를 확인하는 함수는 인증 방식을 결정하는 변수(ua_flag)를 3(NTLM)으로 바꾼다. 하지만 둘째, 헤더 내용을 파싱하는 함수는 데이터가 NTLM 형식이 아니기 때문에 상태를 나타내는 변수(smb_info.qflag)를 성공 상태(1)로 바꾸지 못하고 초기값(2)으로 내버려 둔다. 결국 실행 흐름이 NTLM 검증 함수로 넘어가지만, 이 함수는 qflag가 2인 것을 보고 "이건 내가 처리할 게 아니라 Basic 인증 함수가 처리할 데이터구나"라고 착각해 검사를 아예 건너뛰어 버린다(goto LABEL_36). 두 인증 루틴이 서로 책임을 떠넘기는 로직의 빈틈을 파고든 것이다. 기존의 도구들은 복수의 인증이 얽혀 있는 이러한 구조를 추적하지 못하고 최상위 라우팅 함수만 찾거나 특정 단어(login success 등)만 찾아 헤매다가 진짜 검증 로직을 놓쳐버리고 만다. 프로그램이 뻗어버리는 크래시(Crash)가 나지 않으니 기존 퍼징 도구로는 탐지할 방도가 없었던 것이다.
 
 <br> <br>
