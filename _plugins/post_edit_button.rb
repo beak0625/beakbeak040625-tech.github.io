@@ -23,12 +23,12 @@ Jekyll::Hooks.register :posts, :post_render do |post|
         </div>
         <div style="display:grid; grid-template-columns: 1.2fr 2.8fr 1.5fr; gap:12px; margin:14px 0 10px 0;">
           <select id="ip-cat" style="padding:10px 12px; border:1px solid #d8cebe; border-radius:8px; font-size:14px; background:#fff; color:#222;">
-            <option value="Paper Review">1. 논문 리뷰 (Paper Review)</option>
-            <option value="Security">2. 보안 연구 (Security)</option>
-            <option value="Development">3. 개발 및 프로젝트 (Development)</option>
-            <option value="Bug Bounty">4. 버그바운티 & 워게임 (Bug Bounty)</option>
-            <option value="Award">5. 공모전 및 자격증 (Award & Cert)</option>
-            <option value="Memoir">6. 회고 및 기록 (Memoir)</option>
+            <option value="개발">1. 개발</option>
+            <option value="CTF/Wargame">2. CTF/Wargame</option>
+            <option value="Bug Bounty">3. Bug Bounty</option>
+            <option value="블로그/기술문서">4. 블로그/기술문서</option>
+            <option value="논문/컨퍼런스">5. 논문/컨퍼런스</option>
+            <option value="공모전 및 자격증">6. 공모전 및 자격증</option>
           </select>
           <input id="ip-title" type="text" placeholder="게시글 제목" style="padding:10px 14px; border:1px solid #d8cebe; border-radius:8px; font-size:15px; font-weight:bold; background:#fff; color:#222;">
           <input id="ip-tags" type="text" placeholder="태그 (쉼표로 구분)" style="padding:10px 14px; border:1px solid #d8cebe; border-radius:8px; font-size:14px; background:#fff; color:#222;">
@@ -104,7 +104,7 @@ Jekyll::Hooks.register :posts, :post_render do |post|
         localStorage.setItem('chirpy_edit_raw', raw);
         localStorage.setItem('chirpy_edit_filename', fname);
         var m = raw.match(/^---\\r?\\n([\\s\\S]*?)\\r?\\n---\\r?\\n([\\s\\S]*)$/);
-        var title='', cat='Paper Review', tags='', body=raw;
+        var title='', cat='논문/컨퍼런스', tags='', body=raw;
         if(m){
           var yaml = m[1];
           body = m[2].replace(/^\\r?\\n/,'');
