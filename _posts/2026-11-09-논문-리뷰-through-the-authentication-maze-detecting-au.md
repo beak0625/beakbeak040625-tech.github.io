@@ -80,13 +80,14 @@ https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detect
 
 논문의 해결책을 살펴보기 전, AuthSpark 프레임워크가 취약점을 찾아내기 위해 사용하는 고유의 개념과 기호들을 먼저 정리하였음.
 <br><br>
+
 | 용어 및 기호 | 풀네임 | 개념 정의 및 본 논문에서의 역할 |
 | --- | --- | --- |
 | CVS | Credential Verification Statement (자격 증명 검증문) |자격 증명의 유효성을 최초로 검사해 성공/실패 흐름을 가르는 핵심 조건문 (예: 비밀번호 비교 if문) |
-|AV ($\mathcal{V}_{auth}$)| Authentication Variable (인증 변수) | CVS의 검증 결과(성공/실패 여부)를 담아 다른 변수나 함수 반환값으로 전달하는 인증 변수 |
-| ACS($\mathcal{C}_{auth}$) | Authentication Conditional Statement (인증 조건문) |전파된 AV 값을 바탕으로 성공/실패 경로를 결정하는 모든 인증 조건문의 집합 (CVS가 그 출발점임) |
-| ASBB($\mathcal{B}_{succ}$) | Authentication-Success Basic Block (인증 성공 기본 블록)|인증 검사를 무사히 통과해야만 실행되는 인증 성공 기본 블록 (퍼저가 최종적으로 뚫고 들어가야 할 타겟) |
-| AFBB($\mathcal{B}_{fail}$) | Authentication-Failure Basic Block (인증 실패 기본 블록) | 인증 실패 시 실행되는 인증 실패 기본 블록 (나중에 숨겨진 인증 조건문을 역추론할 때 단서가 됨)   |
+|AV ($$\mathcal{V}_{auth}$$)| Authentication Variable (인증 변수) | CVS의 검증 결과(성공/실패 여부)를 담아 다른 변수나 함수 반환값으로 전달하는 인증 변수 |
+| ACS($$\mathcal{C}_{auth}$$) | Authentication Conditional Statement (인증 조건문) |전파된 AV 값을 바탕으로 성공/실패 경로를 결정하는 모든 인증 조건문의 집합 (CVS가 그 출발점임) |
+| ASBB($$\mathcal{B}_{succ}$$) | Authentication-Success Basic Block (인증 성공 기본 블록)|인증 검사를 무사히 통과해야만 실행되는 인증 성공 기본 블록 (퍼저가 최종적으로 뚫고 들어가야 할 타겟) |
+| AFBB($$\mathcal{B}_{fail}$$) | Authentication-Failure Basic Block (인증 실패 기본 블록) | 인증 실패 시 실행되는 인증 실패 기본 블록 (나중에 숨겨진 인증 조건문을 역추론할 때 단서가 됨)   |
 
 <span style="font-size:1.2em;">2.1 저자들의 두가지 핵심 관찰과 통찰</span>
 <br>
@@ -227,7 +228,7 @@ CVS를 가려낼 때 사용한 유사도 점수 공식($P(d)$)만큼은 파이�
 <br> 
 
 <span style="font-size:1.2em;">1. 임베디드 및 웹 인증 도메인 용어</span>
-
+<br>
 | 용어(Term) | 개념 정의 및 본 논문에서의 역할 |
 | --- | --- |
 | 펌웨어 (Firmware) & 펌웨어 바이너리 | 라우터, 방화벽, NAS, IP 카메라 등 임베디드 하드웨어 장비를 제어하고 구동하기 위해 비휘발성 메모리에 탑재되는 시스템 소프트웨어다. 본 논문에서는 이 펌웨어 내부에 포함되어 외부 네트워크 요청을 처리하는 C/C++ 기반 웹 서버 실행 파일을 핵심 분석 대상으로 삼는다. |
@@ -235,9 +236,9 @@ CVS를 가려낼 때 사용한 유사도 점수 공식($P(d)$)만큼은 파이�
 | NTLM (NT LAN Manager) 인증 | 마이크로소프트가 설계한 챌린지-응답 기반의 인증 프로토콜이다. 평문으로 자격 증명을 보내는 Basic 인증과 달리 서버와 클라이언트가 NTLM 페이로드 메시지를 주고받으며 해시 기반으로 인증한다. 본 논문의 동기 부여 사례에서는 공격자가 User-Agent 헤더는 NTLM용으로, Authorization 헤더는 Basic용으로 섞어 보내 두 인증 루틴이 서로 검증 책임을 미루게 만드는 논리적 사각지대를 유발하는 데 악용되었다. |
 | 논리 취약점 vs 메모리 취약점 |버퍼 오버플로우 같은 메모리 취약점은 잘못된 메모리 참조로 인해 크래시 등 즉각적인 외부 신호를 발생시키지만, 인증 우회 같은 논리 취약점은 프로그램이 정상 실행 흐름 안에서 잘못된 권한 상태에 도달하므로 별도의 탐지 기준 정의가 필수적이다. |
 
-
+<br><br>
 <span style="font-size:1.2em;">2. 바이너리 프로그램 분석 및 퍼징 시스템 용어</span>
-
+<br>
 | 용어 | 개념 정의 및 본 논문에서의 역할 |
 | --- | --- |
 | 펌웨어 리호스팅 (Firmware Rehosting) & 동적 계측 (Dynamic Instrumentation) | 물리적 장비 없이 QEMU 같은 에뮬레이터에서 펌웨어를 부팅 및 실행하는 기술이 리호스팅이다. 에뮬레이터의 바이너리 변환 과정에 추적 코드를 심어 실행된 기본 블록과 메모리 값을 실시간 기록하는 것이 동적 계측이다. |
