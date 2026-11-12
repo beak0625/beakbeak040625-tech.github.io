@@ -156,16 +156,12 @@ window.parseAndFillEditor = function(rawMarkdown, filename) {
   window.renderWritePreview();
 };
 window.bootWritePage = async function() {
+  // 일반 글쓰기 진입 시 이전 수정 데이터가 남아있는 버그 방지 (명확한 분리)
+  localStorage.removeItem('chirpy_edit_raw');
+  localStorage.removeItem('chirpy_edit_filename');
+
   var params = new URLSearchParams(window.location.search);
   var urlEdit = params.get('edit');
-  var storedRaw = localStorage.getItem('chirpy_edit_raw');
-  var storedFile = localStorage.getItem('chirpy_edit_filename');
-  if (storedRaw && storedFile) {
-    localStorage.removeItem('chirpy_edit_raw');
-    localStorage.removeItem('chirpy_edit_filename');
-    window.parseAndFillEditor(storedRaw, storedFile);
-    return;
-  }
   if (urlEdit) {
     var res = await fetch('https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(urlEdit) + '?t=' + Date.now());
     if (res.ok) {
@@ -194,7 +190,7 @@ window.submitPostToGithub = async function() {
     var dateStr = window.isEditMode && window.originalDate ? window.originalDate : (yyyy+'-'+mm+'-'+dd+' 12:00:00 +0900');
     var slug = title.toLowerCase().replace(/[^a-z0-9가-힣]+/g, '-').replace(/^-|-$/g, '') || 'post';
     var targetFile = window.isEditMode && window.editFilename ? window.editFilename : (yyyy+'-'+mm+'-'+dd+'-'+slug+'.md');
-    var md = '---\ntitle: "'+title.replace(/"/g,'\\"')+'"\ndate: '+dateStr+'\ncategories: ["'+cat+'"]\ntags: ['+(tags||'"'+cat+'"')+']\nmath: true\n---\n\n'+body;
+    var md = '---\ntitle: "'+title.replace(/"/g,'\\"')+'"\ndate: '+dateStr+'\ncategories: ["'+cat+'"]\nspgTags: ['+(tags||'"'+cat+'"')+']\ntags: ['+(tags||'"'+cat+'"')+']\nmath: true\n---\n\n'+body;
     var apiUrl = 'https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(targetFile);
     var sha = window.editFileSha;
     if (!sha) {
