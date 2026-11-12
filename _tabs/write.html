@@ -11,27 +11,35 @@ order: 5
 .ce-title { font-size: 20px; font-weight: 800; color: #3b2818; margin: 0; }
 .ce-btn-group { display: flex; gap: 8px; align-items: center; }
 .ce-btn { padding: 8px 14px; background: #fff; color: #333 !important; border: 1px solid #d4cbb8; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none !important; }
+.ce-btn:hover { background: #f3ede2; }
 .ce-btn-primary { padding: 8px 18px; background: #7c5a3f; color: #fff !important; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.ce-btn-primary:hover { background: #5e432e; }
 .ce-meta-row { display: grid; grid-template-columns: 1.2fr 2.8fr 1.5fr; gap: 12px; margin: 16px 0 12px 0; }
 .ce-input, .ce-select { width: 100%; padding: 10px 14px; border: 1px solid #d8cebe; border-radius: 8px; font-size: 14px; background: #fff; color: #222; box-sizing: border-box; }
 .ce-input-title { font-weight: 700; font-size: 15px; }
 .ce-toolbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; background: #f6f1e7; border: 1px solid #e2d9c8; border-radius: 8px; margin-bottom: 12px; }
 .ce-tool-btn { padding: 5px 10px; background: #fff; border: 1px solid #d8cebe; border-radius: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; }
+.ce-tool-btn:hover { background: #eee5d5; }
 .ce-divider { width: 1px; height: 20px; background: #d8cebe; margin: 0 4px; }
 .ce-workspace { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: 68vh; min-height: 520px; }
 .ce-textarea { width: 100%; height: 100%; padding: 16px; border: 1px solid #d8cebe; border-radius: 8px; resize: none; font-family: monospace; font-size: 14px; line-height: 1.75; background: #fff; color: #222; box-sizing: border-box; }
 .ce-preview { width: 100%; height: 100%; padding: 16px 20px; border: 1px solid #d8cebe; border-radius: 8px; overflow-y: auto; background: #fff; color: #222; box-sizing: border-box; text-align: left !important; line-height: 1.75; }
+.ce-preview table { width: 100% !important; border-collapse: collapse !important; margin: 14px 0 !important; display: table !important; }
+.ce-preview th, .ce-preview td { border: 1px solid #ddd !important; padding: 10px 12px !important; text-align: left !important; }
+.ce-preview th { background: #f8f9fa !important; font-weight: bold !important; text-align: center !important; }
 .ce-footer { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: #777; }
 </style>
-<div class="custom-editor-box">
+
+<div class="custom-editor-box" onmouseover="if(!window._ceReady){window._ceReady=true;localStorage.removeItem('chirpy_edit_raw');localStorage.removeItem('chirpy_edit_filename');}">
   <div class="ce-header">
     <h2 class="ce-title" id="ce-header-title">✒️ 블로그 게시글 작성</h2>
     <div class="ce-btn-group">
-      <button type="button" class="ce-btn" onclick="window.setupGithubToken()">🔑 GitHub 연동 설정</button>
+      <button type="button" class="ce-btn" onclick="var cur=localStorage.getItem('gh_pat_token')||localStorage.getItem('github_token')||'';var inp=prompt('GitHub Personal Access Token (repo 권한)을 입력해주세요:',cur);if(inp!==null&&inp.trim()!==''){localStorage.setItem('gh_pat_token',inp.trim());alert('토큰이 저장되었습니다.');}">🔑 GitHub 연동 설정</button>
       <a href="/" class="ce-btn">🏠 블로그 홈</a>
-      <button type="button" class="ce-btn-primary" id="ce-submit-btn" onclick="window.submitPostToGithub()">☁️ 게시글 등록하기</button>
+      <button type="button" class="ce-btn-primary" id="ce-submit-btn" onclick="(async function(btn){var tok=localStorage.getItem('gh_pat_token')||localStorage.getItem('github_token')||localStorage.getItem('token')||'';if(!tok){for(var i=0;i<localStorage.length;i++){var v=localStorage.getItem(localStorage.key(i));if(v&&(v.indexOf('ghp_')===0||v.indexOf('github_pat_')===0)){tok=v;break;}}}if(!tok){tok=prompt('GitHub 토큰(ghp_...)을 입력해주세요:');if(!tok)return;localStorage.setItem('gh_pat_token',tok.trim());}var title=document.getElementById('ce-title').value.trim();var cat=document.getElementById('ce-category').value.trim();var tagsRaw=document.getElementById('ce-tags').value.split(',');var tagsArr=[];for(var j=0;j<tagsRaw.length;j++){var t=tagsRaw[j].trim();if(t)tagsArr.push('\x22'+t+'\x22');}var tags=tagsArr.join(', ');var body=document.getElementById('ce-body').value;if(!title){alert('게시글 제목을 입력해주세요.');return;}btn.disabled=true;btn.innerText='⏳ 등록 중...';try{var now=new Date();var yyyy=now.getFullYear(),mm=String(now.getMonth()+1).padStart(2,'0'),dd=String(now.getDate()).padStart(2,'0'),hh=String(now.getHours()).padStart(2,'0'),mi=String(now.getMinutes()).padStart(2,'0'),ss=String(now.getSeconds()).padStart(2,'0');var dateStr=yyyy+'-'+mm+'-'+dd+' '+hh+':'+mi+':'+ss+' +0900';var slug=title.toLowerCase().replace(/[^a-z0-9가-힣]+/g,'-').replace(/^-|-$/g,'')||'post';var fname=yyyy+'-'+mm+'-'+dd+'-'+slug+'.md';var md='---\ntitle: \x22'+title.replace(/\x22/g,'\\\x22')+'\x22\ndate: '+dateStr+'\ncategories: [\x22'+cat+'\x22]\ntags: ['+(tags||'\x22'+cat+'\x22')+']\nmath: true\n---\n\n'+body;var url='https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/'+encodeURIComponent(fname);var sha=null;var cRes=await fetch(url,{headers:{'Authorization':'token '+tok}});if(cRes.ok){var ex=await cRes.json();sha=ex.sha;}var u8=new TextEncoder().encode(md);var bin='';for(var k=0;k<u8.length;k++)bin+=String.fromCharCode(u8[k]);var payload={message:'Create post: '+fname,content:btoa(bin)};if(sha)payload.sha=sha;var pRes=await fetch(url,{method:'PUT',headers:{'Authorization':'token '+tok,'Content-Type':'application/json'},body:JSON.stringify(payload)});if(pRes.ok){alert('새 게시글이 성공적으로 등록되었습니다! (약 1분 뒤 반영됩니다)');window.location.href='/';}else{var err=await pRes.json();alert('저장 실패: '+(err.message||'토큰 권한을 확인해주세요.'));}}catch(e){alert('오류: '+e.message);}finally{btn.disabled=false;btn.innerText='☁️ 게시글 등록하기';}})(this)">☁️ 게시글 등록하기</button>
     </div>
   </div>
+
   <div class="ce-meta-row">
     <select id="ce-category" class="ce-select">
       <option value="개발">1. 개발</option>
@@ -44,169 +52,35 @@ order: 5
     <input type="text" id="ce-title" class="ce-input ce-input-title" placeholder="게시글 제목을 입력하세요">
     <input type="text" id="ce-tags" class="ce-input" placeholder="태그 입력 (쉼표로 구분: NDSS, Firmware)">
   </div>
+
   <div class="ce-toolbar">
-    <select class="ce-tool-btn" onchange="window.insertHeading(this.value); this.value='';">
+    <select class="ce-tool-btn" onchange="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd,sel=el.value.substring(s,e)||'제목';if(this.value==='1')el.setRangeText('<span style=\x22font-size:1.5em;\x22>'+sel+'</span>\n<br>\n',s,e,'end');if(this.value==='2')el.setRangeText('<span style=\x22font-size:1.2em;\x22>'+sel+'</span>\n<br>\n',s,e,'end');if(this.value==='3')el.setRangeText('\n### '+sel+'\n',s,e,'end');this.value='';el.focus();el.dispatchEvent(new Event('input'));">
       <option value="">문단 제목</option>
       <option value="1">대제목 (1.5em)</option>
       <option value="2">중제목 (1.2em)</option>
       <option value="3">소제목 (###)</option>
     </select>
     <div class="ce-divider"></div>
-    <button type="button" class="ce-tool-btn" onclick="window.wrapSelection('**', '**')"><b>B</b></button>
-    <button type="button" class="ce-tool-btn" onclick="window.wrapSelection('*', '*')"><i>I</i></button>
-    <button type="button" class="ce-tool-btn" onclick="window.wrapSelection('<u>', '</u>')"><u>U</u></button>
-    <button type="button" class="ce-tool-btn" onclick="window.wrapSelection('~~', '~~')"><s>S</s></button>
-    <button type="button" class="ce-tool-btn" onclick="window.wrapSelection('<mark style=&quot;background:#fff3b0;&quot;>', '</mark>')">🖍️ 형광펜</button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText('**'+(el.value.substring(s,e)||'텍스트')+'**',s,e,'end');el.focus();el.dispatchEvent(new Event('input'));"><b>B</b></button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText('*'+(el.value.substring(s,e)||'텍스트')+'*',s,e,'end');el.focus();el.dispatchEvent(new Event('input'));"><i>I</i></button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText('<u>'+(el.value.substring(s,e)||'텍스트')+'</u>',s,e,'end');el.focus();el.dispatchEvent(new Event('input'));"><u>U</u></button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText('~~'+(el.value.substring(s,e)||'텍스트')+'~~',s,e,'end');el.focus();el.dispatchEvent(new Event('input'));"><s>S</s></button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText('<mark style=\x22background:#fff3b0;\x22>'+(el.value.substring(s,e)||'텍스트')+'</mark>',s,e,'end');el.focus();el.dispatchEvent(new Event('input'));">🖍️ 형광펜</button>
     <div class="ce-divider"></div>
-    <button type="button" class="ce-tool-btn" onclick="window.insertTableTemplate()">⊞ 표 삽입</button>
-    <button type="button" class="ce-tool-btn" onclick="window.insertPaperTemplate()">📄 논문 템플릿</button>
-    <button type="button" class="ce-tool-btn" onclick="window.wrapSelection('```\n', '\n```')">&lt;/&gt; 코드</button>
-    <button type="button" class="ce-tool-btn" onclick="window.wrapSelection('$$', '$$')">√x 수식</button>
-    <button type="button" class="ce-tool-btn" onclick="window.insertAtCursor('\n<br>\n')">↵ 줄바꿈(&lt;br&gt;)</button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body');el.setRangeText('\n\n| 항목 | 설명 | 비고 |\n| :--- | :--- | :--- |\n| 내용 1 | 설명 1 | 비고 1 |\n| 내용 2 | 설명 2 | 비고 2 |\n\n',el.selectionStart,el.selectionEnd,'end');el.focus();el.dispatchEvent(new Event('input'));">⊞ 표 삽입</button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body');el.setRangeText('선정 논문: \n\n게재 학회 및 연도: \n\n저자: \n\n<span style=\x22font-size:1.5em;\x22>1. 이 논문의 배경 및 문제 정의</span>\n<br>\n\n<span style=\x22font-size:1.5em;\x22>2. 핵심 아이디어 및 시스템 구성</span>\n<br>\n\n<span style=\x22font-size:1.5em;\x22>3. 실험 평가 및 한계점</span>\n<br>\n\n<span style=\x22font-size:1.5em;\x22>4. 느낀점 및 인사이트</span>\n<br>\n',el.selectionStart,el.selectionEnd,'end');el.focus();el.dispatchEvent(new Event('input'));">📄 논문 템플릿</button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText('```\n'+(el.value.substring(s,e)||'코드')+'\n```',s,e,'end');el.focus();el.dispatchEvent(new Event('input'));">&lt;/&gt; 코드</button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText('$$'+(el.value.substring(s,e)||'수식')+'$$',s,e,'end');el.focus();el.dispatchEvent(new Event('input'));">√x 수식</button>
+    <button type="button" class="ce-tool-btn" onclick="var el=document.getElementById('ce-body');el.setRangeText('\n<br>\n',el.selectionStart,el.selectionEnd,'end');el.focus();el.dispatchEvent(new Event('input'));">↵ 줄바꿈(&lt;br&gt;)</button>
   </div>
+
   <div class="ce-workspace">
-    <textarea id="ce-body" class="ce-textarea" oninput="window.renderWritePreview()" placeholder="여기에 본문을 작성하세요..."></textarea>
+    <textarea id="ce-body" class="ce-textarea" placeholder="여기에 본문을 작성하세요..." oninput="(function(el){var p=document.getElementById('ce-preview');if(!p)return;var lines=el.value.split('\n'),out=[],inTbl=false;for(var i=0;i<lines.length;i++){var l=lines[i].trim();if(l.indexOf('|')===0&&l.lastIndexOf('|')===l.length-1&&l.length>1){var cells=l.slice(1,-1).split('|');if(l.replace(/[\|\:\-\s]/g,'')==='')continue;if(!inTbl){out.push('<table><thead><tr>');for(var c=0;c<cells.length;c++)out.push('<th>'+cells[c].trim()+'</th>');out.push('</tr></thead><tbody>');inTbl=true;}else{out.push('<tr>');for(var c=0;c<cells.length;c++)out.push('<td>'+cells[c].trim()+'</td>');out.push('</tr>');}}else{if(inTbl){out.push('</tbody></table>');inTbl=false;}var h=lines[i].replace(/^### (.*$)/,'<h3>$1</h3>').replace(/^## (.*$)/,'<h2>$1</h2>').replace(/^# (.*$)/,'<h1>$1</h1>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/~~(.*?)~~/g,'<del>$1</del>');out.push(h+'<br>');}}if(inTbl)out.push('</tbody></table>');p.innerHTML=out.join('');if(window.MathJax&&window.MathJax.typesetPromise)window.MathJax.typesetPromise([p]).catch(function(){});})(this)"></textarea>
     <div id="ce-preview" class="ce-preview content"></div>
   </div>
+
   <div class="ce-footer">
-    <span id="ce-status-left">작성 모드 대기 중</span>
-    <span id="ce-status-right">임시저장: 자동 활성화됨</span>
+    <span id="ce-status-left">작성 모드 작동 중</span>
+    <span id="ce-status-right">실시간 미리보기 & 표 변환 활성화됨</span>
   </div>
 </div>
-<script>
-window.isEditMode = false;
-window.editFilename = null;
-window.editFileSha = null;
-window.originalDate = null;
-window.getSavedToken = function() {
-  var t = localStorage.getItem('gh_pat_token') || localStorage.getItem('github_token') || localStorage.getItem('token');
-  if (t) return t;
-  for (var i = 0; i < localStorage.length; i++) {
-    var v = localStorage.getItem(localStorage.key(i));
-    if (v && (v.startsWith('ghp_') || v.startsWith('github_pat_'))) return v;
-  }
-  return '';
-};
-window.renderWritePreview = function() {
-  var bodyEl = document.getElementById('ce-body');
-  var previewEl = document.getElementById('ce-preview');
-  if (!bodyEl || !previewEl) return;
-  var md = bodyEl.value || '';
-  var html = md.replace(/^### (.*$)/gim, '<h3>$1</h3>').replace(/^## (.*$)/gim, '<h2>$1</h2>').replace(/^# (.*$)/gim, '<h1>$1</h1>').replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>').replace(/\n/g, '<br>');
-  previewEl.innerHTML = html;
-  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([previewEl]).catch(function(){});
-};
-window.wrapSelection = function(prefix, suffix) {
-  var el = document.getElementById('ce-body');
-  var s = el.selectionStart, e = el.selectionEnd;
-  var sel = el.value.substring(s, e) || '텍스트';
-  el.setRangeText(prefix + sel + suffix, s, e, 'end');
-  el.focus(); window.renderWritePreview();
-};
-window.insertAtCursor = function(text) {
-  var el = document.getElementById('ce-body');
-  el.setRangeText(text, el.selectionStart, el.selectionEnd, 'end');
-  el.focus(); window.renderWritePreview();
-};
-window.insertHeading = function(level) {
-  if (level === '1') window.wrapSelection('<span style="font-size:1.5em;">', '</span>\n<br>\n');
-  if (level === '2') window.wrapSelection('<span style="font-size:1.2em;">', '</span>\n<br>\n');
-  if (level === '3') window.insertAtCursor('\n### 제목\n');
-};
-window.insertTableTemplate = function() {
-  window.insertAtCursor('\n\n| 항목 | 설명 | 비고 |\n| :--- | :--- | :--- |\n| 내용 1 | 설명 1 | 비고 1 |\n| 내용 2 | 설명 2 | 비고 2 |\n\n');
-};
-window.insertPaperTemplate = function() {
-  window.insertAtCursor('선정 논문: \n\n게재 학회 및 연도: \n\n저자: \n\n<span style="font-size:1.5em;">1. 이 논문의 배경 및 문제 정의</span>\n<br>\n\n<span style="font-size:1.5em;">2. 핵심 아이디어 및 시스템 구성</span>\n<br>\n\n<span style="font-size:1.5em;">3. 실험 평가 및 한계점</span>\n<br>\n\n<span style="font-size:1.5em;">4. 느낀점 및 인사이트</span>\n<br>\n');
-};
-window.setupGithubToken = function() {
-  var cur = window.getSavedToken();
-  var inp = prompt('GitHub Personal Access Token (repo 권한)을 입력해주세요:', cur);
-  if (inp !== null && inp.trim() !== '') { localStorage.setItem('gh_pat_token', inp.trim()); alert('토큰이 저장되었습니다.'); }
-};
-window.parseAndFillEditor = function(rawMarkdown, filename) {
-  window.isEditMode = true;
-  window.editFilename = filename;
-  document.getElementById('ce-header-title').innerText = '✏️ 블로그 게시글 수정 (' + filename + ')';
-  document.getElementById('ce-submit-btn').innerText = '☁️ 게시글 수정 완료하기';
-  document.getElementById('ce-status-left').innerText = '수정 모드: ' + filename;
-  var match = rawMarkdown.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  var body = rawMarkdown;
-  if (match) {
-    var yaml = match[1];
-    body = match[2].replace(/^\r?\n/, '');
-    var tm = yaml.match(/title:\s*["']?(.*?)["']?\s*$/m);
-    if (tm) document.getElementById('ce-title').value = tm[1].replace(/\\"/g, '"');
-    var dm = yaml.match(/date:\s*(.*?)\s*$/m);
-    if (dm) window.originalDate = dm[1].trim();
-    var cm = yaml.match(/categories:\s*\[?\s*["']?([^"'\],\r\n]+)["']?/m);
-    if (cm) {
-      var catVal = cm[1].trim();
-      var catEl = document.getElementById('ce-category');
-      var found = false;
-      for (var i = 0; i < catEl.options.length; i++) {
-        if (catEl.options[i].value === catVal || catEl.options[i].text.includes(catVal)) { catEl.selectedIndex = i; found = true; break; }
-      }
-      if (!found) { var opt = document.createElement('option'); opt.value = catVal; opt.text = catVal; catEl.appendChild(opt); catEl.value = catVal; }
-    }
-    var tgm = yaml.match(/tags:\s*\[(.*?)\]/m);
-    if (tgm) document.getElementById('ce-tags').value = tgm[1].replace(/["']/g, '').split(',').map(function(s){return s.trim();}).filter(Boolean).join(', ');
-  }
-  document.getElementById('ce-body').value = body;
-  window.renderWritePreview();
-};
-window.bootWritePage = async function() {
-  // 일반 글쓰기 진입 시 이전 수정 데이터가 남아있는 버그 방지 (명확한 분리)
-  localStorage.removeItem('chirpy_edit_raw');
-  localStorage.removeItem('chirpy_edit_filename');
-
-  var params = new URLSearchParams(window.location.search);
-  var urlEdit = params.get('edit');
-  if (urlEdit) {
-    var res = await fetch('https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(urlEdit) + '?t=' + Date.now());
-    if (res.ok) {
-      var data = await res.json();
-      window.editFileSha = data.sha;
-      var bin = atob(data.content.replace(/\s/g, ''));
-      var bytes = new Uint8Array(bin.length);
-      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      window.parseAndFillEditor(new TextDecoder('utf-8').decode(bytes), urlEdit);
-    }
-  }
-};
-window.submitPostToGithub = async function() {
-  var token = window.getSavedToken();
-  if (!token) { token = prompt('GitHub 토큰(ghp_...)을 입력해주세요:'); if (!token) return; localStorage.setItem('gh_pat_token', token.trim()); }
-  var title = document.getElementById('ce-title').value.trim();
-  var cat = document.getElementById('ce-category').value.trim();
-  var tags = document.getElementById('ce-tags').value.split(',').map(function(s){return s.trim();}).filter(Boolean).map(function(t){return '"'+t+'"';}).join(', ');
-  var body = document.getElementById('ce-body').value;
-  if (!title) { alert('제목을 입력해주세요.'); return; }
-  var btn = document.getElementById('ce-submit-btn');
-  btn.disabled = true; btn.innerText = '⏳ 반영 중...';
-  try {
-    var now = new Date();
-    var yyyy = now.getFullYear(), mm = String(now.getMonth()+1).padStart(2,'0'), dd = String(now.getDate()).padStart(2,'0');
-    var dateStr = window.isEditMode && window.originalDate ? window.originalDate : (yyyy+'-'+mm+'-'+dd+' 12:00:00 +0900');
-    var slug = title.toLowerCase().replace(/[^a-z0-9가-힣]+/g, '-').replace(/^-|-$/g, '') || 'post';
-    var targetFile = window.isEditMode && window.editFilename ? window.editFilename : (yyyy+'-'+mm+'-'+dd+'-'+slug+'.md');
-    var md = '---\ntitle: "'+title.replace(/"/g,'\\"')+'"\ndate: '+dateStr+'\ncategories: ["'+cat+'"]\nspgTags: ['+(tags||'"'+cat+'"')+']\ntags: ['+(tags||'"'+cat+'"')+']\nmath: true\n---\n\n'+body;
-    var apiUrl = 'https://api.github.com/repos/beakbeak040625-tech/beakbeak040625-tech.github.io/contents/_posts/' + encodeURIComponent(targetFile);
-    var sha = window.editFileSha;
-    if (!sha) {
-      var cRes = await fetch(apiUrl, { headers: { 'Authorization': 'token ' + token } });
-      if (cRes.ok) { var ex = await cRes.json(); sha = ex.sha; }
-    }
-    var u8 = new TextEncoder().encode(md);
-    var bin = ''; for (var i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
-    var payload = { message: (window.isEditMode ? 'Update: ' : 'Create: ') + targetFile, content: btoa(bin) };
-    if (sha) payload.sha = sha;
-    var pRes = await fetch(apiUrl, { method: 'PUT', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    if (pRes.ok) { alert('완료되었습니다!'); window.location.href = '/'; }
-    else { alert('저장 실패: 토큰 권한을 확인해주세요.'); }
-  } catch (e) { alert('오류: ' + e.message); }
-  finally { btn.disabled = false; btn.innerText = window.isEditMode ? '☁️ 게시글 수정 완료하기' : '☁️ 게시글 등록하기'; }
-};
-window.bootWritePage();
-</script>
-<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onload="if(window.bootWritePage)window.bootWritePage();" style="display:none;">
