@@ -88,7 +88,7 @@ https://www.ndss-symposium.org/ndss-paper/through-the-authentication-maze-detect
 | ACS($$\mathcal{C}_{auth}$$) | Authentication Conditional Statement (인증 조건문) |전파된 AV 값을 바탕으로 성공/실패 경로를 결정하는 모든 인증 조건문의 집합 (CVS가 그 출발점임) |
 | ASBB($$\mathcal{B}_{succ}$$) | Authentication-Success Basic Block (인증 성공 기본 블록)|인증 검사를 무사히 통과해야만 실행되는 인증 성공 기본 블록 (퍼저가 최종적으로 뚫고 들어가야 할 타겟) |
 | AFBB($$\mathcal{B}_{fail}$$) | Authentication-Failure Basic Block (인증 실패 기본 블록) | 인증 실패 시 실행되는 인증 실패 기본 블록 (나중에 숨겨진 인증 조건문을 역추론할 때 단서가 됨)   |
-
+<br><br>
 <span style="font-size:1.2em;">2.1 저자들의 두가지 핵심 관찰과 통찰</span>
 <br>
 저자들은 인증 메커니즘이 아무리 다양하더라도 모든 인증 우회 취약점의 본질은 "적절한 자격 증명 검사를 거치지 않고 인증 성공 상태 코드에 도달하는 실행 경로가 존재하는 것"이라는 점에 주목하여 두 가지 규칙성을 발견했다.
