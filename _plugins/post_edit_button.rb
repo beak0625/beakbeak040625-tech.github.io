@@ -101,8 +101,6 @@ Jekyll::Hooks.register :posts, :post_render do |post|
       };
       window.openInPageEditor = function(){
         var raw = getRaw();
-        localStorage.setItem('chirpy_edit_raw', raw);
-        localStorage.setItem('chirpy_edit_filename', fname);
         var m = raw.match(/^---\\r?\\n([\\s\\S]*?)\\r?\\n---\\r?\\n([\\s\\S]*)$/);
         var title='', cat='논문/컨퍼런스', tags='', body=raw;
         if(m){
