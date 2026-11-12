@@ -87,3 +87,14 @@
     width: 100% !important;
   }
 </style>
+
+<!-- 블로그 전체 수학 수식($...$ 및 $$...$$) 자동 렌더링 엔진 -->
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    }
+  };
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
