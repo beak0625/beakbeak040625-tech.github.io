@@ -167,9 +167,7 @@ Ratcliff/Obershelp알고리즘으로 분기점 이전의 유사도와 이후의 
 | 평가 항목 (Research Question) | 비교 대상 / 설정 | 핵심 실험 결과 및 수치 |
 | --- | --- | --- |
 | RQ1-1: CVS(자격 증명 검증문) 식별 정확도| AuthSpark vs Weasel (총 44개 실제 CVS 대상, Top-1 기준)| AuthSpark: 44개 중 42개(95.5%) 정확히 Top-1 식별 (Top-4 기준 44개 전수 식별), 알려진 취약점 14개와 연결된 핵심 CVS 11개 100% 식별. <br>Weasel: 44개 중 **16개(36.4%)**만 식별, 취약점 관련 CVS는 11개 중 3개만 탐지. |
-| RQ1-2: ASBB(인증 성공 블록) 식별 절제 연구 | Full AuthSpark vs 규칙별 제거 모델 4종 (NoCopy, NoFunc, NoVarCond, NoDynamicCond) | Full AuthSpark: 총 383개 ASBB 식별, 14개 1-day 취약점 경로 100%(14/14) 노출. 
-<br>복사 전파 제거(NoCopy): 230개 식별 (취약점 4개만 노출). 
-<br>함수 반환 변수 제거(NoFunc): 132개 식별 (취약점 1개만 노출 — 이 규칙을 제외하면 14개의 취약점 중 단 1개만 찾아낼 수 있으므로, 함수 반환값을 통한 상태 전파가 추적 과정에서 가장 중요한 핵심 규칙임을 입증).
+| RQ1-2: ASBB(인증 성공 블록) 식별 절제 연구 | Full AuthSpark vs 규칙별 제거 모델 4종 (NoCopy, NoFunc, NoVarCond, NoDynamicCond) | Full AuthSpark: 총 383개 ASBB 식별, 14개 1-day 취약점 경로 100%(14/14) 노출.<br>복사 전파 제거(NoCopy): 230개 식별 (취약점 4개만 노출).<br>함수 반환 변수 제거(NoFunc): 132개 식별 (취약점 1개만 노출 — 이 규칙을 제외하면 14개의 취약점 중 단 1개만 찾아낼 수 있으므로, 함수 반환값을 통한 상태 전파가 추적 과정에서 가장 중요한 핵심 규칙임을 입증).
 <br>변수 기반 조건문 제거(NoVarCond): 77개 식별 (취약점 2개만 노출). 동적 트레이스 조건문 제거(NoDynamicCond): 363개 식별 (1-day는 모두 찾았으나 실제 0-day 1건(Report Issue 1) 미탐지).|
 | RQ2: 1-day 취약점 퍼징 탐지 성능 (QEMU 지원 22개 장비, 24시간×5회)| AuthSpark vs 변이 제거 모델 2종 vs 기존 퍼저 3종 (SRFuzzer, Snipuzz, BooFuzz) |AuthSpark: 대상 장비 내 알려진 1-day 9개 전수(9/9) 탐지 및 0-day 6개 발굴 (기술 문서가 없던 NETGEAR XR300의 CVE-2021-34977도 URL 내 "rpc" 문자열 조건을 역산해 재발견).
 <br>AuthSpark-NoStr(동적 문자열 제거): 1-day 6개, 0-day 3개 / NoStr-NoMutate: 1-day 3개, 0-day 2개.
