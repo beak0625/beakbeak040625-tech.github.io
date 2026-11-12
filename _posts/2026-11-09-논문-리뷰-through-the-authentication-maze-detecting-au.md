@@ -1,7 +1,7 @@
 ---
 title: "논문 리뷰: Through the Authentication Maze: Detecting Authentication Bypass Vulnerabilities in Firmware Binaries"
 date: 2026-11-09 05:54:35 +0900
-categories: ["Paper Review"]
+categories: ["논문/컨퍼런스"]
 tags: ["Paper Review"]
 math: true
 ---
